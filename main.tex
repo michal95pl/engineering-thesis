@@ -1,0 +1,115 @@
+\documentclass[12pt,a4paper]{article}
+
+% Required packages
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{wrapfig}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepackage{float}
+\usepackage{amsmath}
+% Allow more floats at the top of the page (figures)
+\renewcommand{\topfraction}{0.95}
+\renewcommand{\floatpagefraction}{0.9}
+\renewcommand{\textfraction}{0.05}
+\setcounter{topnumber}{5}
+\setcounter{totalnumber}{10}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{codeListingStyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+
+% Set page margins
+\geometry{top=0cm, bottom=2cm, left=2cm, right=2cm}
+
+\begin{document}
+
+% Remove page numbers
+\pagestyle{empty}
+
+% Add image at the top of the page
+\begin{figure}[t!]
+    \centering
+    \includegraphics[width=1\textwidth]{images/PJATK_PL_poziom_1.png}
+    \label{fig:top-image}
+\end{figure}
+
+% Centered content
+\begin{center}
+\vspace{2cm}
+
+{\Large \textbf{Wydział Informatyki}}
+
+\vspace{1.5cm}
+
+{\large  \textbf{Systemy Inteligentne i Data Science}}
+
+\vspace{0.5cm}
+
+Inteligentne Systemy Przetwarzania Danych
+
+\vspace{2cm}
+
+{\large  \textbf{Michał Lichtarski}} \\
+Nr albumu s27643
+
+\vspace{1cm}
+
+{\large  \textbf{Marcin Ziółkowski}} \\
+Nr albumu s27597
+
+\vspace{2cm}
+
+{\Large \textbf{Tytuł pracy dyplomowej}}
+
+\end{center}
+
+\vfill
+
+\begin{flushleft}
+\hspace*{0.5\textwidth}Praca inżynierska \\
+\hspace*{0.5\textwidth}Promotor Adam Szmigielski
+\end{flushleft}
+
+\vspace{2.5cm}
+
+\begin{center}
+Warszawa, luty, 2025
+\end{center}
+
+\newgeometry{top=2cm, bottom=2cm, left=2cm, right=2cm}
+\include{chapters/abstract}
+\include{chapters/introduction}
+\include{chapters/chess model/pgn data format}
+\include{chapters/chess model/chess library}
+\include{chapters/chess model/chess plus library}
+\include{chapters/chess model/alghoritms/monte carlo tree search}
+\include{chapters/chess model/gui}
+\include{chapters/sources}
+
+\end{document}
