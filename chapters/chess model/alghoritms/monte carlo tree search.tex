@@ -30,8 +30,14 @@ Wyżej opisane drzewo minimax jest skuteczne do przewidywania ruchów w grach o 
 \section*{Drzewo monte carlo}
 Algorytm Monte Carlo Tree Search jest heurystycznym algorytmem przeszukiwania zbioru stanów. Jego największą zaletą jest iteracyjność, dzięki czemu w zależności od dostępnej mocy obliczeniowej (czasu) możemy tworzyć dowolnie duże drzewo i po każdej iteracji jest w stanie zwrócić najlepszy ruch. Dodatkowo w podstawowej wersji nie wymaga skomplikowanej funkcji oceniającej dany stan. Działanie algorytmu opiera się na czterech etapach: selekcji, ekspansji, symulacji oraz wstecznej propagacji.
 
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=0.6\textwidth]{images/mcts_sections.png}
+\caption{Etapy algorytmu Monte Carlo Tree Search}
+\end{figure}
+
 \section{Selekcja}
-Etap selekcji, jak sama nazwa wskazuje wybiera najbardziej obiecujący liść do dalszego rozwoju drzewa.
+Etap selekcji, jak sama nazwa wskazuje wybiera najbardziej obiecujący liść do dalszego rozwoju drzewa. Liść jest rozumiany jako węzeł, który nie został jeszcze całkowicie rozwinięty, czyli nie posiada jeszcze wszystkich swoich dzieci.
 Dany węzeł jest wybierany na podstawie maksymalizacji funkcji UCT:
 
 \begin{equation}
@@ -48,8 +54,7 @@ Dany węzeł jest wybierany na podstawie maksymalizacji funkcji UCT:
 
 \hspace{1cm}
 
-Wzór ten składa się z sumy dwóch części. Pierwsza część $\bar{x}_i$ odpowiada za eksploatację, czyli wybór węzła, który jak dotąd osiągnął największy wynik. Druga część $c\, \sqrt{\frac{\ln N}{n_i}}$ skupia się na eksploracji, czyli wyborze węzła, który był rzadziej odwiedzany.
-Logarytm naturalny.
+Wzór ten składa się z sumy dwóch części. Pierwsza z nich $\bar{x}_i$ odpowiada za eksploatację, czyli wybór węzła, który jak dotąd osiągnął największy wynik. Druga część $c\, \sqrt{\frac{\ln N}{n_i}}$ skupia się na eksploracji, czyli wyborze węzła, który był rzadziej odwiedzany. Na poniżyszm wykresie możemy zauważyć, że część ta znacznie bardziej faworyzuje mniejszą liczbę odwiedzin $n_i$, ponadto użycie logarytmu naturalnego sprawia, że zmiana liczby odwiedzin węzła rodzica nie powoduje nagłych zmian w wartości eksploracji. Współczynnik $c$ we wzorze pozwala nam dostosować balans między eksploracją, a eksploatacją. Wyższa wartość $c$ faworyzuje eksplorację, natomiast niższa eksploatację.
 
 \begin{figure}[!t]
 \centering
@@ -70,4 +75,13 @@ Logarytm naturalny.
 \caption{Składnik eksploracji $\sqrt{\frac{\ln N}{n_i}}$ dla $N=100$}
 \label{fig:uct-exploration}
 \end{figure}
+
+\section{Ekspansja}
+Etap ekspansji ma za zadanie rozwijać drzewo poprzez dodanie jednego nowego węzła do wybranego liścia. Nowy węzeł jest wybierany losowo spośród wszystkich możliwych ruchów, które nie zostały jeszcze dodane do drzewa.
+
+\section{Symulacja}
+Etap symulacji polega na przeprowadzeniu symulacji rozgrywki \textbf{od} nowo dodanego węzła do końca gry w sposób losowy. W przypadku szachów oznacza to wykonywanie losowych ruchów aż do osiągnięcia stanu końcowego: mat, pat, remis.
+
+\section{Wsteczna propagacja}
+Etap wstecznej propagacji polega na propagowaniu wyniku symulacji w górę drzewa. Aktualizowane są wszystkie węzły od nowo dodanego węzła do korzenia. W każdym z tych węzłów zwiększana jest liczba odwiedzin, oraz sam wynik gry.
 
