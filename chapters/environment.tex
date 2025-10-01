@@ -1,0 +1,14 @@
+\section*{Środowisko}
+Przedstawione rozwiązanie zostało zaimplementowane w języku Python. Podyktowane to było przede wszystkim dużą ilością dostępnych wysokopoziomowych bibliotek, które znacznie przyśpieszają opracowanie i testowanie algorytmów.
+
+Ze względu na bardzo duży koszt obliczeniowy trenowania sieci, został wykorzystany serwer z procesorem Intel Xeon E5-2686v4 wraz z 128GB pamięci RAM oraz kartą graficzną NVIDIA RTX 3080 z 12GB pamięci. Jako system operacyjny został użyty PROXMOX na którym zostały uruchomione odpowiednie maszyny wirtualne z systemem Ubuntu desktop z bezpośrednim dostępem do GPU. Takie rozwiązanie pozwala na dużą elastyczność ze względu na łatwy dostęp do zasobów serwera poprzez przeglądarkę internetową z dowolnego miejsca. Ponadto umożliwia nieprzerwane trenowanie modeli.
+
+\section*{Wykorzystane biblioteki}
+Język Python, który jest interpretowanym językiem wysokiego poziomu, wymaga używania bibliotek napisanych w językach niższego poziomu, w celu zapewnienia akceptowalnej wydajności.
+W celu implementacji przedstawionego rozwiązania zostały wykorzystane następujące biblioteki:
+
+\begin{itemize}
+	\item \textbf{NumPy}: służy do obliczeń naukowych; umożliwia bardzo szybkie operacje na macierzach i wektorach.
+	\item \textbf{Matplotlib}: umożliwia tworzenie wykresów i wizualizację danych.
+	\item \textbf{PyTorch}: biblioteka do implementacji sieci neuronowych; umożliwia elastyczne tworzenie architektur sieci oraz łatwe wykorzystanie GPU, co znacząco przyspiesza trenowanie modeli.
+\end{itemize}
