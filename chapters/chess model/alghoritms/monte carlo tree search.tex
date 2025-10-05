@@ -41,26 +41,28 @@ Etap selekcji, jak sama nazwa wskazuje wybiera najbardziej obiecujący liść do
 Dany węzeł jest wybierany na podstawie maksymalizacji funkcji UCT:
 
 \begin{equation}
-\operatorname{UCT}(i) \,=\, \bar{x}_i \, + \, c\, \sqrt{\frac{\ln N}{n_i}}\,
+\operatorname{UCT}(s,a) \,=\, \widehat{Q}(s,a) \, + \, c\, \sqrt{\frac{\ln(N(s))}{N(s,a)}},\,
+\quad
+\widehat{Q}(s,a) \,=\, \dfrac{W(s,a)}{N(s,a)}\,
 \end{equation}
 
 \noindent gdzie:
 \begin{description}
-  \item[$\bar{x}_i$] - średni wynik zwycięstw dla $i$-tego węzła
-  \item[$n_i$] - liczba odwiedzeń $i$ - tego węzła
-  \item[$N$] - liczba odwiedzeń węzła rodzica
+  \item[$N(s)$] - liczba odwiedzin stanu $s$
+  \item[$N(s,a)$] - liczba odwiedzeń akcji $a$ w stanie $s$
+  \item[$W(s,a)$] - wartość sumy nagród akcji $a$ w stanie $s$
   \item[$c$] - współczynnik eksploracji
 \end{description}
 
 \hspace{1cm}
 
-Wzór ten składa się z sumy dwóch części. Pierwsza z nich $\bar{x}_i$ odpowiada za eksploatację, czyli wybór węzła, który jak dotąd osiągnął największy wynik. Druga część $c\, \sqrt{\frac{\ln N}{n_i}}$ skupia się na eksploracji, czyli wyborze węzła, który był rzadziej odwiedzany. Na poniżyszm wykresie możemy zauważyć, że część ta znacznie bardziej faworyzuje mniejszą liczbę odwiedzin $n_i$, ponadto użycie logarytmu naturalnego sprawia, że zmiana liczby odwiedzin węzła rodzica nie powoduje nagłych zmian w wartości eksploracji. Współczynnik $c$ we wzorze pozwala nam dostosować balans między eksploracją, a eksploatacją. Wyższa wartość $c$ faworyzuje eksplorację, natomiast niższa eksploatację.
+Wzór ten składa się z sumy dwóch części. Pierwsza z nich $\widehat{Q}(s,a)$ odpowiada za eksploatację, czyli wybór węzła, który jak dotąd osiągnął najlepszy wynik. Druga część $c\, \sqrt{\frac{\ln(n_s)}{n_{s,a}}}$ skupia się na eksploracji, czyli wyborze węzła, który był rzadziej odwiedzany. Na poniżyszm wykresie możemy zauważyć, że część ta znacznie bardziej faworyzuje mniejszą liczbę odwiedzin $n_{s,a}$, ponadto użycie logarytmu naturalnego sprawia, że zmiana liczby odwiedzin węzła rodzica nie powoduje nagłych zmian w wartości eksploracji. Współczynnik $c$ we wzorze pozwala nam dostosować balans między eksploracją, a eksploatacją.
 
 \begin{figure}[!t]
 \centering
 \begin{tikzpicture}
 \begin{axis} [
-    xlabel={Liczba odwiedzin węzła $n_i$},
+    xlabel={Liczba odwiedzin węzła $n_{s,a}$},
     ylabel={Wartość eksploracji},
     grid=major,
     width=10cm,
@@ -69,10 +71,10 @@ Wzór ten składa się z sumy dwóch części. Pierwsza z nich $\bar{x}_i$ odpow
     samples=200
 ]
 \addplot[blue, thick] {sqrt(ln(50)/x)};
-\legend{$\sqrt{\frac{\ln N}{n_i}}$}
+\legend{$\sqrt{\frac{\ln 50}{n_{s,a}}}$}
 \end{axis}
 \end{tikzpicture}
-\caption{Składnik eksploracji $\sqrt{\frac{\ln N}{n_i}}$ dla $N=100$}
+\caption{Składnik eksploracji $\sqrt{\frac{\ln(n_s)}{n_{s,a}}}$ dla $n_s=50$}
 \label{fig:uct-exploration}
 \end{figure}
 
@@ -84,4 +86,3 @@ Etap symulacji polega na przeprowadzeniu symulacji rozgrywki \textbf{od} nowo do
 
 \section{Wsteczna propagacja}
 Etap wstecznej propagacji polega na propagowaniu wyniku symulacji w górę drzewa. Aktualizowane są wszystkie węzły od nowo dodanego węzła do korzenia. W każdym z tych węzłów zwiększana jest liczba odwiedzin, oraz sam wynik gry.
-
