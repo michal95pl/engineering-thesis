@@ -96,4 +96,41 @@ Na poniższym listingu można zauważyć bardzo dużą różnicę między samym 
 \end{lstlisting}
 
 \section*{Wada i zaleta WU-UCT}
-Podobnie jak w biznesie, w algorytmie MCTS kluczowe jest znalezienie balansu między eksploracją, a eksploatacją. WU-UCT skupia się bardziej na eksploracji, co pozwala niekiedy wyjść z lokalnego optimum. Jednakże w przypadku zbyt dużej eksploracji, algorytm może być mniej skuteczny, gdyż skupia się na potencjalnie dobrych ruchach, a nie na najlepszych. Python jest językiem interpretowanym, przez co niespodziewanym wąskim gardłem są najprostrze operacje na drzewie, przez co zyskany czas na zrównolegleniu nie jest tak ogromny. Czasami występują przypadki, gdzie bardziej opłaca się czasowo iteracyjnie podążać za najlepszym liściem, niż równolegle rozwijać drzewo w szerz.
+Podobnie jak w biznesie, w algorytmie MCTS kluczowe jest znalezienie balansu między eksploracją, a eksploatacją. WU-UCT skupia się bardziej na eksploracji, co pozwala niekiedy wyjść z lokalnego optimum. Jednakże w przypadku zbyt dużej eksploracji, algorytm może być mniej skuteczny, gdyż skupia się na potencjalnie dobrych ruchach, a nie na najlepszych. 
+
+Python jest językiem interpretowanym, przez co niespodziewanym wąskim gardłem są najprostrze operacje na drzewie, przez co zyskany czas na zrównolegleniu nie jest tak ogromny. Czasami występują przypadki, gdzie bardziej opłaca się czasowo iteracyjnie podążać za najlepszym liściem, niż równolegle rozwijać drzewo w szerz.
+
+\begin{figure}[!h]
+\centering
+\begin{tikzpicture}
+  \begin{axis}[
+      width=10cm,
+      height=6cm,
+      grid=both,
+      xlabel={Wielkość bufora},
+      ylabel={Czas [s]},
+      xtick={1,2,3,4,5,6,7,8},
+      ymin=55,
+      ymax=130,
+      ymajorgrids=true,
+      xmajorgrids=true,
+      legend style={at={(0.02,0.98)},anchor=north west,font=\small},
+      mark size=2.5pt
+  ]
+    \addplot+[blue, thick, mark=o] coordinates {
+      (1,125.73)
+      (2,87.72)
+      (3,75.23)
+      (4,68.89)
+      (5,65.69)
+      (6,62.93)
+      (7,61.69)
+      (8,60.07)
+    };
+  \end{axis}
+\end{tikzpicture}
+\caption{Wpływ wielkości bufora na czas wykonania 6000 iteracji}
+\label{fig:metric-iteracje}
+\end{figure}
+
+Testy wydajnościowe przedstawione na wykresie zostały przeprowadzone na procesorze i7-11800H oraz GPU RTX 3060. Można łatwo zauważyć, że wraz ze wzrostem wielkości bufora, zysk czasowy jest coraz mniejszy i najoptymalniejszym rozmiarem jest 2. Taki stan rzeczy jest głównie spowodowany wymienionym wyżej Pythonem, gdzie operacje utrzymujące drzewo są kosztowne. Szczególnie jest to widoczne przy etapie ekspansji, gdzie czas wykonania wynosi $O(n * m)$, gdzie $n$ to wielkość bufora, a $m$ to liczba możliwych ruchów z danego stanu. Rozwiązaniem jest zrównoleglenie również i tego procesu, aczkolwiek jest to niemożliwe, gdyż drzewo jest zapisywane w sposób obiektowy. Podczas przekazywania danych do procesów, są one najpierw serializowane co powoduje problem z referencjami.
