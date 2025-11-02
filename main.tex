@@ -1,29 +1,42 @@
-\documentclass[12pt,a4paper]{article}
+\documentclass[12pt,a4paper]{memoir}
 
 % Required packages
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath}
+% Math symbols (\mathbb, \mathcal, etc.)
+\usepackage{amssymb}
+% Improve micro-typography to reduce overfull boxes
+\usepackage[final]{microtype}
+% Use Polish as main language; provide=* avoids error when language ini is present but ldf missing
+\usepackage[main=polish,provide=*]{babel}
 \usepackage{graphicx}
 \usepackage{geometry}
 \usepackage{wrapfig}
 \usepackage{listings}
 \usepackage{xcolor}
 \usepackage{hyperref}
+\usepackage{xurl}
+\hypersetup{hidelinks, hypertexnames=false}
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.18}
 \usepackage{float}
-\usepackage{amsmath}
-% Allow more floats at the top of the page (figures)
+% Allow more floats and flexible page layout (helps with Underfull \vbox)
 \renewcommand{\topfraction}{0.95}
 \renewcommand{\floatpagefraction}{0.9}
 \renewcommand{\textfraction}{0.05}
+\renewcommand{\bottomfraction}{0.9}
 \setcounter{topnumber}{5}
+\setcounter{bottomnumber}{5}
 \setcounter{totalnumber}{10}
 
 \definecolor{codegreen}{rgb}{0,0.6,0}
 \definecolor{codegray}{rgb}{0.5,0.5,0.5}
 \definecolor{codepurple}{rgb}{0.58,0,0.82}
 \definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+% \chapterstyle{veelo}
 
 \lstdefinestyle{codeListingStyle}{
     backgroundcolor=\color{backcolour},   
@@ -43,6 +56,16 @@
     showtabs=false,                  
     tabsize=2
 }
+\usepackage{graphics}
+
+\usepackage{titlesec}
+\titleformat{\chapter}[display]
+  {\normalfont\Large\raggedleft}
+  {\MakeUppercase{\chaptertitlename}%
+    \rlap{ \resizebox{!}{1.5cm}{\thechapter} \rule{7cm}{1.5cm}}}
+  {10pt}{\Huge}
+\titlespacing*{\chapter}{0pt}{5pt}{20pt}
+
 
 % Set page margins
 \geometry{top=0cm, bottom=2cm, left=2cm, right=2cm}
@@ -51,6 +74,12 @@
 
 % Remove page numbers
 \pagestyle{empty}
+
+% Avoid stretching pages to equal height; reduces Underfull \vbox warnings
+\raggedbottom
+
+% Gently reduce Overfull \hbox warnings by allowing tiny extra stretch in lines
+\emergencystretch=1em
 
 % Add image at the top of the page
 \begin{figure}[t!]
@@ -99,10 +128,10 @@ Nr albumu s27597
 \vspace{2.5cm}
 
 \begin{center}
-Warszawa, luty, 2025
+Warszawa, luty, 2026
 \end{center}
 
-\newgeometry{top=2cm, bottom=2cm, left=2cm, right=2cm}
+\newgeometry{top=2cm, bottom=2cm, left=2.5cm, right=2.5cm}
 \include{chapters/abstract}
 \include{chapters/introduction}
 \include{chapters/environment}
@@ -111,6 +140,7 @@ Warszawa, luty, 2025
 \include{chapters/chess model/chess plus library}
 \include{chapters/chess model/alghoritms/monte carlo tree search}
 \include{chapters/chess model/alghoritms/neural network}
+\include{chapters/chess model/alghoritms/parallel-mcts}
 \include{chapters/chess model/evaluation}
 \include{chapters/chess model/gui}
 \include{chapters/sources}
