@@ -1,0 +1,153 @@
+\setcounter{chapter}{1}
+
+\chapter{Klasa boardPlus}
+Klasa boardPlus powstała jako rozszerzenie klasy Board z biblioteki chess. Naprawia ona kilka błędów związanych z zmianą perspektywy planszy, a także dodaje bardzo ważne metody enkodujące i dekodujące ruchy oraz planszę.
+
+\section{Działanie klasy Board}
+Przed omówieniem klasy boardPlus, warto przybliżyć działanie zwykłej klasy Board z biblioteki chess. Umożliwia ona stworzenie obiektu reprezentującego planszę szachową i wykonywanie na niej ruchów wraz z sprawdzaniem ich poprawności.
+
+Działanie tej klasy opiera się na kilku 64 bitowych liczbach, gdzie każdy bit odpowiada jednemu polu. W ten sposób są zapisywane następujące informacje:
+
+\begin{itemize}
+    \item rodzaj figury
+    \item kolor figury
+    \item czy pole jest puste
+    \item czy pole jest atakowane przez białe figury
+    \item czy pole jest atakowane przez czarne figury
+    \item czy figura jest z promocji
+    \item czy figura ma prawo do roszady
+\end{itemize}
+
+\vspace{0.5cm}
+
+Konstruktor obiektu planszy przyjmuje opcjonalnie jako argument \textit{fen}. Jest to standardowa forma zapisu stanu planszy szachowej, reprezentowanej w postaci 8 linii oddzielonych znakiem "/". Każda z nich zawiera pierwsze litery angielskich nazw figur np: p od pawn, b od bishop itp. Dodatkowo w przypadku białych figur, jest to wielka litera, a w przypadku czarnych mała. Cyfry oznaczają ilość pustych pól. Na przykład: PPPP1PP oznacza cztery białe pionki, jedno puste pole oraz dwa białe pionki. Po zakodowanych polach planszy, występują dodatkowe informacje oddzielone spacją: kolor gracza który wykonuje ruch, prawa do roszady, pola na których można wykonać bicie w przelocie, licznik półruchów oraz numer rundy. 
+Taki format daje możliwość bardzo łatwego przesyłania oraz zapisywania obiektu board, bez wykonywania serializacji, co w dalszej części pracy zostanie wykorzystane.
+
+\newpage
+
+\begin{lstlisting}[
+    language=Python,
+    caption=Przykład obiektu Board,
+    inputencoding=utf8,
+    basicstyle=\ttfamily\footnotesize,
+    backgroundcolor=\color{gray!10},
+    frame=single,
+    showspaces=false,
+    showstringspaces=false,
+    numbers=none
+]
+>>> board = chess.Board()
+>>> print(board)
+r n b q k b n r
+p p p p p p p p
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+P P P P P P P P
+R N B Q K B N R
+
+>>> BoardPlus.show_bitboard(board.rooks)
+1 0 0 0 0 0 0 1
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+1 0 0 0 0 0 0 1
+
+# przyklad notacji FEN
+>>> board = chess.Board("r1bqkb1r/pppp1Qpp/2n2n2/4p3/2B1P3/8/PPPP1PPP/RNB1K1NR b KQkq - 0 4")
+>>> print(board)
+r . b q k b . r
+p p p p . Q p p
+. . n . . n . .
+. . . . p . . .
+. . B . P . . .
+. . . . . . . .
+P P P P . P P P
+R N B . K . N R
+\end{lstlisting}
+
+\newpage
+
+\section{Zmiana perspektywy planszy}
+Jak było wspomniane w pierwszym rozdziale, zmiana perspektywy planszy jest istotnym elementem w tworzeniu zbioru danych. Polega ona na zamianie kolorów graczy oraz obicie planszy względem osi x oraz y. Biblioteka chess posiada w pełni działającą metodę \textit{apply\_mirror()}, która obraca planszę względem osi x jednocześnie zamieniając kolory figur. Problem pojawia się przy obrocie względem osi y. Bilioteka zawiera generyczną metodę \textit{apply\_transform()} przyjmującą jako argument funkcję transformującą. W naszym przypadku jest to funkcja \textit{flip\_horizontal()}, która wykonuje operacje bitowe na opisujących plansze liczbach 64 bitowych. Mimo powyższych operacji, po wykonaniu obrotu nie działa poprawnie metoda \textit{push()}, która wykonuje ruch na planszy. Problemem okazały się roszady.
+
+\vspace{0.5cm}
+
+\section{Rozwiązanie problemu z roszadami}
+Problemy związane z obsługą roszad występują w dwóch miejscach: podczas inicjalizacji praw do roszady oraz w trakcie wykonywania samej roszady.
+
+Inicjalizacja praw do roszady przy pierwszym ruchu realizowana jest w metodzie \textit{clean\_castling\_rights()}. Metoda ta uwzględnia kolor figury oraz fakt, czy figura znajdująca się na danym polu pochodzi z promocji pionka. Problem pojawia się w sytuacji, gdy przed wykonaniem pierwszego ruchu następuje obrócenie planszy. Autor biblioteki nie przewidział takiego przypadku i zastosował sztywne sprawdzenie czy figura powstała z promocji, co skutkuje nieprawidłowym wyzerowaniem praw do roszady już na etapie inicjalizacji.
+
+\vspace{0.5cm}
+
+\lstset{style=codeListingStyle}
+\begin{lstlisting}[
+    language=Python, 
+    caption=poprawiony fragment metody clean castling rights,
+    inputencoding=utf8
+]
+white_castling &= (chess.BB_A1 | chess.BB_H1)
+black_castling &= (chess.BB_A8 | chess.BB_H8)
+
+if not self.occupied_co[chess.WHITE] & self.kings & ~self.promoted & (chess.BB_D1 if self.changed_perspective else chess.BB_E1):
+    white_castling = 0
+if not self.occupied_co[chess.BLACK] & self.kings & ~self.promoted & (chess.BB_D8 if self.changed_perspective else chess.BB_E8):
+    black_castling = 0
+
+return white_castling | black_castling
+\end{lstlisting}
+
+\newpage
+
+W podobny sposób poprawiono również dalszą część metody \textit{push()} odpowiedzialną za samą obsługę roszad.
+
+W pierwszej kolejności została zmodyfikowana metoda \textit{to\_chess960()}, tak aby uwzględniała transformacje planszy. Jest wywoływana na początku metody \textit{push()} i odpowiada za konwersję wykonywanej roszady do formatu zgodnego ze standardem \textit{Chess960}. Przekształca ona ruch w taki sposób, aby po przesunięciu króla na pole sąsiadujące z wieżą, zmienna \textit{move.to\_square} wskazywała na pole, na którym znajduje się wieża. Takie obejście było konieczne, ponieważ klasa \textit{Chess} nie umożliwia formalnego wykonania ruchu polegającego na umieszczeniu własnej figury na polu zajętym przez inną własną figurę.
+
+Podczas ustawiania nowych pozycji figur w trakcie wykonywania roszady również uwzględniono transformacje planszy, co pozwoliło na prawidłowe wykonanie tego ruchu niezależnie od zostosowania transformacji planszy.
+
+
+Po powyższych operacjach, metoda \textit{push()} usuwa figury i ustawia je na nowych, poprawnych pozycjach wraz z uwzględnieniem obrotu.
+
+\vspace{0.5cm}
+
+\begin{figure}[!h]
+\centering
+\includegraphics[width=0.8\textwidth]{images/board with castling.png}
+\caption{Działanie metody to\_chess960}
+\end{figure}
+\newpage
+
+\section{Dekodowanie planszy}
+Dekodowanie planszy polega na stworzeniu 13 binarnych macierzy 8x8, gdzie każda z nich reprezentuje inny typ figury oraz kolor. Ostatnia z nich wskazuje na puste pola. Po zakodowaniu planszy, macieże są spłaszczane do jednego wektora o długości 832. 
+
+\section{Dekodowanie i enkodowanie ruchów}
+Dekodowanie i enkodowanie ruchów jest bardzo podobne jak ma to miejsce w Alphazero. Ruchy są indeksowane od 0 do 77.
+
+Wyróżniamy 2 grupy ruchów: ruchy prostoliniowe oraz nietypowe. Do pierwszej grupy zaliczamy ruchy wszystkich figur oprócz skoczka. Druga grupa to ruchy skoczka oraz specjalne, czyli roszada i promocje pionka.
+
+Ruchy prostolinijne są indeksowane na podstawie kierunku oraz odległości. Rozróżniamy 8 kierunków: 4 pionowe i poziome oraz 4 diagonalne. Każdy z tych kierunków posiada 7 możliwych odległości, gdyż maksymalnie figura może poruszyć się o 7 pól. W ten sposób uzyskujemy 56 indeksów \cite{AlphaZero}.
+
+\hspace{0.5cm}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.4\textwidth]{images/queen_moves.png}
+\caption{Indeksowanie ruchów prostoliniowych}
+\end{figure}
+
+Indeksowanie ruchów gońca oraz specjalnych jest sztywno ustalone. Skoczek posiada 8 możliwych ruchów. Natomiast promocje pionka są dzielone na 12 ruchów, zależnie od tego w jaki sposób pionek dostanie się na ostatni rząd. Może to być ruch prawo, lub w lewo poprzez zbicie figury, lub naturalnie prosto do przodu. Dodatkowo każda z tych opcji posiada 4 możliwości promocji: hetman, wieża, goniec oraz skoczek. 
+Ostatnim specjalnym ruchem jest roszada, która posiada 2 indeksy: za króla oraz królewska.
+
+\newpage
+
+Istnieje bardziej skompresowany sposób kodowania ruchów. Polega on na kodowaniu z punktu widzenia położenia figury na planszy. Sposób ten działa niczym winda, gdzie wybieramy na jakie piętro (pole) chcemy pojechać. Dla przykładu jeśli chcemy z pola E4 wykonać ruch gońcem na pole c6, to jest to ruch w lewo na 6 rząd, co jest indeksem 25. W porównaniu do poprzedniego sposobu, jest znacznie mniej stanów, 32 zamiast 56, aczkolwiek zawiera on jedną, bardzo dużą wadę. Takie rozwiązanie jest sprzeczne z ideą wykorzystywanych warstw konwolucyjnych. Temat ten zostanie rozwinięty w dalszej części pracy.
+\begin{figure}[!h]
+\centering
+\includegraphics[width=0.5\textwidth]{images/bishop_moves.png}
+\caption{Przykład indeksowania ruchów drugim sposobem}
+\end{figure}
+\newpage

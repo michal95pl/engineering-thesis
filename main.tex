@@ -1,4 +1,4 @@
-\documentclass[12pt,a4paper]{memoir}
+\documentclass[12pt,a4paper, openany]{memoir}
 
 % Required packages
 \usepackage[utf8]{inputenc}
@@ -72,8 +72,13 @@
 
 \begin{document}
 
-% Remove page numbers
-\pagestyle{empty}
+% Enable page numbers on all pages
+\pagestyle{plain}
+\pagenumbering{arabic}
+% Ensure chapter-opening pages also use the same pagestyle
+\aliaspagestyle{chapter}{plain}
+% Suppress page number on the very first page only
+\thispagestyle{empty}
 
 % Avoid stretching pages to equal height; reduces Underfull \vbox warnings
 \raggedbottom
@@ -107,11 +112,6 @@ Inteligentne Systemy Przetwarzania Danych
 {\large  \textbf{Michał Lichtarski}} \\
 Nr albumu s27643
 
-\vspace{1cm}
-
-{\large  \textbf{Marcin Ziółkowski}} \\
-Nr albumu s27597
-
 \vspace{2cm}
 
 {\Large \textbf{Tytuł pracy dyplomowej}}
@@ -135,14 +135,14 @@ Warszawa, luty, 2026
 \include{chapters/abstract}
 \include{chapters/introduction}
 \include{chapters/environment}
-\include{chapters/chess model/pgn data format}
-\include{chapters/chess model/chess library}
-\include{chapters/chess model/chess plus library}
-\include{chapters/chess model/alghoritms/monte carlo tree search}
-\include{chapters/chess model/alghoritms/neural network}
-\include{chapters/chess model/alghoritms/parallel-mcts}
-\include{chapters/chess model/evaluation}
-\include{chapters/chess model/gui}
-\include{chapters/sources}
+\include{chapters/chess_model/data_processing}
+\include{chapters/chess_model/chess_plus_library}
+\include{chapters/chess_model/alghoritms/monte_carlo_tree_search}
+\include{chapters/chess_model/alghoritms/neural_network}
+\include{chapters/chess_model/alghoritms/parallel-mcts}
+\include{chapters/chess_model/evaluation}
+\include{chapters/chess_model/gui}
 
+\bibliographystyle{plain}
+\bibliography{bibliography}
 \end{document}

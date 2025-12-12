@@ -1,0 +1,113 @@
+\setcounter{chapter}{3}
+
+\chapter{Architektura sieci neuronowej}
+Architektura sieci neuronowej wykorzystywana w opisywanym rozwiązaniu jest inspirowana modelem użytym w \textit{AlphaZero}. Aczkolwiek od czasu powstania modelu od \textit{DeepMind} mineło już kilka lat, gdzie w tym czasie powstało kilka nowych technik i ulepszeń. Zostaną one przybliżone w tym rozdziale.
+
+\section{Architektura}
+Jak zostało wspomniane w poprzednim rozdziale, sieć neuronowa jest kręgosłupem algorytmu MCTS. To właśnie ona odpowiada za stworzenie dwóch rozkładów prawdopodobieństwa na podstawie dostarczanych planszy. Odpowiednio dla ruchów oraz wyniku partii. W związku z tym, podobnie jak ma to miejsce w \textit{AlphaZero}, sieć posiada jedno wejście oraz dwie grupy wyjść. Wejściem są zakodowane trzy plansze szachowe tworzące spójną sekwencję czasową. Pozwala to sieci na lepsze zrozumienie gry, gdyż widzi płynny przebieg rozgrywki, a nie jedynie pojedyńczy stan. Również zyskujemy większą różnorodność danych. W przypadku dostarczania tylko jednego stanu, jest znacznie większe prawdopodobieństwo powtarzania się takich samych danych treningowych, gdzie sieć może mieć problem z uogólnieniem wiedzy.
+
+Dzięki dwóm grupom wyjść, sieć jest mniej obciążająca obliczeniowo niż dwie oddzielne sieci. Ponadto taka sieć we wspólnym trzonie jest zmuszona do generalizacji cech rozgrywki, co przyczynia się do lepszej regaluaryzacji modelu \cite{AlphaGoZero}. Dopiero po rozdzieleniu na dwie części, sieć specjalizuje się w swoich zadanich.
+
+Na rysunku 3.1 przedstawiony jest diagram architektury sieci neuronowej. Zawiera on warstwy rezydualne, SE oraz dwie głowice wyjściowe. W następnej części tego rozdziału zostaną one szczegółowo omówione.
+
+
+\newpage
+
+\begin{figure}[!h]
+\centering
+\includegraphics[width=0.6\textwidth]{images/netArchitecture.png}
+\caption{Architektura sieci neuronowej}
+\end{figure}
+
+\newpage
+
+\section{Warstwa rezydualna}
+
+Najważniejszym elementem przedstawianej architektury są warstwy rezydualne. Rozwiązują one oproblem z degradacją gradientu. Objawia się on przez nasyconą dokładność danych treningowych, która nie jest w stanie się poprawić. Nie jest to spowodowane przeuczeniem, lecz głębokością samej sieci. Przez co wbrew intuicji, płytszy model może osiągnąć lepsze wyniki.
+
+W celu rozwiązania tego problemu, powstała koncepcja warstw rezydualnych. Zmieniają one sposób przepłwu informacji przez sieć. Zamiast uczyć się bezpośrednio funkcji $H(x)$, warstwa rezydualna uczy się różnicy $F(x) = H(x) - x$. Wyjściem z warstwy jest suma $F(x) + x$. W rezultacie sieć uczy się jedynie zmiany sygnału, a nie całej funkcji. Bardzo dużą zaletą tego podejścia jest stosunkowe proste stworzenie funkcji tożsamościowej poprzez wyzerowanie wag. W ten sposób autorzy w swojej pracy, pokazali że sieci rezydualne nie tworzą większego błędu niż płytsze modele \cite{ResNet}.
+
+Na rysunku 4.2 przedstawiona jest standardowa architektura warstwy rezydualnej. Składa sie ona z 2 warstw konwolucyjnych wpieranych przez warstwy normalizacji batchowej oraz funkcje aktywacji.
+
+\hspace{0.5cm}
+
+\begin{figure}[!h]
+\centering
+\includegraphics[width=1.0\textwidth]{images/resNet.png}
+\caption{Architektura warstwy rezydualnej. Kolorem niebieskim zaznaczono skip connection.}
+\end{figure}
+
+\subsection{Warstwa konwolucyjna}
+Warstwa konwolucyjna jest fundamentem wykorzystywanej sieci neuronowej. To ona odpowiada za analizę oraz generalizację cech planszy szachowej. Pierwotnie została zaprojektowana do analizy obrazów, jednak równie dobrze sobie radzi z danymi przestrzennymi, takimi jak plansza szachowa. 
+
+Nazwa pochodzi od operacji matematycznej zwanej konwolucją \footnote{W bibliotekach do uczenia maszynowego używa się podobnej funkcji zwanej cross-correlation, która działa identycznie jak konwolucja, ale nie odwraca kernela \cite{DeepLearning}.}. Polega ona na przesuwaniu kernela po wejściowej macierzy i wykonywaniu iloczynu skalarnego między filtrem, a fragmentem obrazu. Wynikiem jest mapa cech, która zawiera wyodrębnione cechy z oryginalnego obrazu. Dodatkowo, dzięki temu że kernel jest mniejszy niż obraz, to nie jest on w pełni połączony z wejściem, tak jak ma to miejsce w warstwach gęstych. Tym sposobem nie tylko ograniczamy liczbę parametrów, ale również sieć uczy się lokalnych wzorców \cite{DeepLearning}. W przypadku szachów mogą to być różne wzorce pozycyjne. 
+
+Jak było wspomniane przy opisie przetwarzania danych, sieć konwolucyjna poprzez przesuwanie kernela, jest odporna na translacje. Oznacza to, że niezależnie od położenia figury na planszy, sieć jest w stanie rozpoznać jej cechy. Jednakże, o ile radzi sobie z translacją, to ma problem z rotacją, przez co w przetwarzaniu danych konieczne było ujednolicenie pozycji planszy do jednej orientacji \cite{DeepLearning}.
+
+W przedstawionym modelu wykorzystywane są warstwy konwolucyjne o standardowym rozmiarze kernela $3 \times 3$ oraz stride 1 w celu zachowania rozmiaru obrazu. Podobnie jak w AlphaZero \cite{AlphaZero}, nie zostały wykorzystne warstwy poolingowe. Głównym powodem jest fakt, że o ile są w stanie bardziej ougólnić cechy, to traci się przez to informacje przestrzenne oraz małe detale obrazu \cite{DeepLearning}.
+
+Dodatkowo należy wspomnieć, że wraz z głębokością sieci, rośnie pole recepcyjne. Oznacza to, że neurony w głebszych warstwach analizują ze sobą coraz to większe fragmenty obrazu wejściowego \cite{DeepLearning}.
+
+\hspace{0.5cm}
+
+\subsection{Normalizacja batchowa}
+Normalizacja batchowa jest techniką adaptacyjnej reparametryzacji danych. Jej celem jest eliminacja zjawiska wewnętrznego przesunięcia kowariancji (ang. \textit{internal covariate shift}) \cite{BatchNormalization}. Objawia się ono poprzez zmieniający się rozkład wyjścia z warstw sieci neuronowej podczas adaptacji parametrów w trakcie uczenia. Innymi słowy, warstwy sieci są zależne od siebie nawzajem, przez co zmiana wag w jednej z nich wpływa na pozostałe. Prowadzi to do problemów ze stabilnością oraz doborem optymalnego współczynnika uczenia, skutkując często eksplodującymi lub zanikającymi gradientami.
+
+Jeżeli dla przykładu rozważymy sieć neuronową bez biasu oraz z tożsamościową funkcją aktywacji, to w sytuacji, gdy wagi są większe od 1, wyjście sieci po aktualizacji parametrów zmieni się znacząco z powodu mnożenia wag (wzór 4.1). Oznacza to, że nawet mała zmiana wag w jednej warstwie może spowodować dużą zmianę na wyjściu sieci, szczególnie w głębokich modelach \cite{BatchNormalization}, nawet przy zastosowaniu małego współczynnika uczenia \cite{DeepLearning}.
+
+\hspace{0.5cm}
+
+\begin{equation}
+\hat{y} = x \cdot (w_1 - \epsilon g_1)(w_2 - \epsilon g_2)\cdots(w_\ell - \epsilon g_\ell)
+\end{equation}
+
+\hspace{0.5cm}
+
+W celu rozwiązania tego problemu, normalizacja batchowa normalizuje wyjście z warstwy na podstawie wyliczonej średniej oraz odchylenia standardowego całego batcha. W rezultacie rozkład danych posiada średnią równą zeru oraz jednostkowe odchylenie standardowe.
+
+\hspace{0.5cm}
+
+\begin{equation}
+    H' = \frac{H-\mu}{\sqrt{\sigma^2 + \epsilon}}
+\end{equation}
+
+\hspace{0.5cm}
+
+gdzie $\mu$ to średnia, $\sigma$ to odchylenie standardowe, a $\epsilon$ to mała stała zapewniająca stabilność numeryczną (zapobiega dzieleniu przez zero).
+
+\newpage
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.4\textwidth]{images/przed_norm.png}
+\hspace{0.5cm}
+\includegraphics[width=0.4\textwidth]{images/po_norm.png}
+\caption{Normalizacja. Dane są centrowane i skalowane, dzięki czemu zachowują swój kształt, lecz zmieniają zakres wartości.}
+\end{figure}
+
+Poniższe wzory prezentują mechanizm wstecznej propagacji błędu w opisanej wyżej prostej sieci. Ukazują one źródło problemu z niestabilnością gradientu oraz sposób, w jaki normalizacja batchowa go rozwiązuje. W równaniu 4.4 przedstawiony jest wzór na gradient w warstwie $n$ po wykonaniu różniczkowaniu wzoru 4.3. Składa się on z trzech czynników: pochodnej funkcji błędu, błędu z warstw wyższych oraz wejścia z warstwy poprzedniej ($h_{n-1}$). To właśnie ten ostatni człon jest kluczowy. We wzorze 4.5 widać, że sygnał wejściowy $h_{n-1}$ zależy od iloczynu wag warstw poprzednich. W rezultacie, w sieci bez wykonywania normalizacji, może dojść do eksplozji lub zaniku gradientu, gdy wagi są odpowiednio duże lub małe.
+
+Zastosowanie normalizacji na $h_{n-1}$ eliminuje ten problem, niwelując zależność sygnału od skali wag. Prowadzi to do nietypowego zjawiska, w którym większe wagi skutkują mniejszymi gradientami \cite{BatchNormalization}. Dzięki temu sieć uczy się stabilniej, co pozwala na użycie większego współczynnika uczenia.
+
+\begin{equation}
+g_n=\frac{\partial L}{\partial \hat{y}} \cdot \frac{\partial \hat{y}}{\partial h_{l}} \cdot \frac{\partial h_{l-1}}{\partial h_{l-2}} \cdot ... \cdot
+\frac{\partial h_{n}}{\partial w_{n}}
+\end{equation}
+
+\hspace{0.5cm}
+
+\begin{equation}
+g_{n} = \frac{\partial L}{\partial \hat{y}} \cdot \underbrace{\left( \prod_{i=n+1}^{l} W_{i} \right)}_{\text{błąd z warstw wyższych}} \cdot \underbrace{h_{n-1}}_{\text{sygnał wejściowy}}
+\end{equation}
+
+\hspace{0.5cm}
+
+\begin{equation}
+h_{n-1} = x \cdot \prod_{i=0}^{n-1} W_{i}
+\end{equation}
+
+Należy jednak zauważyć, że po znormalizowaniu wyjścia z warstwy, sieć może stracić zdolności do ekspresji. Na przykład dla funkcji ReLU uniemożliwia to całkowite wygaszenie neuronu, a dla funkcji sigmoidalnej ogranicza wykorzystanie nieliniowych obszarów funkcji nasycenia, gdzie dane głównie mogą oscylować wokół środka, gdzie ma ona postać funkcji liniowej. Aby rozwiązać ten problem, algorytm normalizacji batchowej wprowadza dwa uczone parametry: skalę $\gamma$ oraz przesunięcie $\beta$. Pozwala to sieci na zastosowanie dowolnej średniej oraz odchylenia standardowego \cite{DeepLearning}. Istotne jest to, że współczynnik $\beta$ przejmuje rolę biasu. Z tego powodu w warstwach poprzedzających normalizację batchową bias jest wyłączony. Nawet gdyby był obecny, jego wpływ zostałby zniwelowany w procesie odejmowania średniej $\mu$.
+
+\begin{equation}
+    H'' = \gamma H' + \beta
+\end{equation}
