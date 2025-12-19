@@ -111,3 +111,42 @@ Należy jednak zauważyć, że po znormalizowaniu wyjścia z warstwy, sieć moż
 \begin{equation}
     H'' = \gamma H' + \beta
 \end{equation}
+
+\newpage
+
+\section{Squeeze and Excitation} 
+Kolejnym elementem widocznym na diagramie 4.1 są bloki \textit{Squeeze and Excitation}. Bardzo podobne rozwiązanie zostało zastosowane w LolaChessZero {\cite{lc0_nn}} Ich zadaniem jest adaptacyjna rekalibracja kanałów cech na wyjściu z warstwy konwolucyjnej. Dzięki temu niwelują one ograniczenia splotu, który analizuje jedynie lokalne wzorce, traktując zależności między kanałami w sposób niejawny \cite{SqueezeAndExcitation}. Ograniczenie to wynika przede wszystkim z użycia niewielkiego filtra, który operuje na małym fragmencie wejścia, a następnie sumuje wyniki ze wszystkich kanałów.
+
+W celu ulepszenia warstw konwolucyjnych, blok \textit{Squeeze and Excitation} składa się z dwóch etapów: \textit{Squeeze} oraz \textit{Excitation}. Pierwszy z nich ma na celu stworzenie deskryptora globalnych cech dla każdego kanału. Osiąga się to poprzez zastosowanie globalnego uśredniania, które redukuje wymiary kanału do pojedynczej wartości.
+
+Natomiast zadaniem \textit{Excitation} jest wychwycenie nieliniowych zależności między kanałami oraz wygenerowanie wag dla każdego z nich. Jest to realizowane za pomocą dwóch warstw gęstych rozdzielonych funkcją SiLu. Na wyjściu jest funkcja sigmoidalna z której wychodzą wartości w przedziale [0,1]. Dodatkowo, w celu ograniczenia liczby parametrów oraz poprawy generalizacji modelu, wprowadzono współczynnik redukcji \cite{SqueezeAndExcitation}. Zmniejsza on wyjście pierwszej warstwy, po czym druga warstwa przywraca pierwotną liczbę kanałów na wyjściu bloku.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.2\textwidth]{images/squeezeArchi.png}
+\caption{Blok Squeeze and Excitation}
+\end{figure}
+
+\newpage
+
+\section{Funkcja aktywacji SiLU}
+
+Ostatnim elementem architektury sieci jest funkcja aktywacji SiLU. Matematycznie jest ona definiowana jako iloczyn wejścia oraz funkcji sigmoidalnej.
+\hspace{0.5cm}
+
+\begin{equation}
+    f(x) = x \cdot \sigma(x) = \frac{x}{1+e^{-x}}
+\end{equation}
+
+\hspace{0.5cm}
+
+Dla dużych wartości dodatnich funkcja zachowuje się niemal identycznie jak ReLU, natomiast dla wartości ujemnych dąży do zera \cite{SiLu}. Jednakże, nie jest ona funkcją monotonicznie rosnącą. W punkcie $x \approx -1.28$ posiada minimum.
+
+W tym punkcie pochodna funkcji przyjmuje wartość zerową. W rezultacie dla wartości mniejszych niż $-1.28$, funkcja wykazuje charakter samoregulujący. W tym obszarze pochodna jest ujemna, co powoduje, że podczas wstecznej propagacji błędu odwracany jest znak gradientu. Skutkiem tego jest hamowanie wzrostu wag o dużej wartości bezwzględnej. Taki mechanizm pozwala zapobiec wyłączeniu się neuronu. Należy jednak zaznaczyć, że obszar ten jest ograniczony, więc przy wystąpieniu odpowiednio dużego błędu, wprowadzenie neuronu w stan trwałej saturacji jest nadal możliwe, jak w przypadku funkcj ReLu.
+
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=1\textwidth]{images/SiLu.png}
+\caption{Po lewej porównanie SiLu oraz ReLu. Po prawej pochodna SiLu (dSiLu) oraz funkcja sigmoidalna. Źródło: \cite{SiLu}}
+\end{figure}
