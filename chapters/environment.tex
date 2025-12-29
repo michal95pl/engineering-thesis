@@ -1,9 +1,8 @@
 \section*{Środowisko}
 Przedstawione rozwiązanie zostało zaimplementowane w języku Python. Podyktowane to było przede wszystkim dużą ilością dostępnych wysokopoziomowych bibliotek, które znacznie przyśpieszają opracowanie i testowanie algorytmów.
 
-Ze względu na bardzo duży koszt obliczeniowy trenowania sieci, został wykorzystany serwer z procesorem Intel Xeon E5-2686v4 wraz z 128GB pamięci RAM oraz kartami graficznymi Nvidia RTX 3080 12gb oraz NVIDIA Tesla v100 16gb. Jako system operacyjny został użyty PROXMOX na którym została uruchomiona maszyna wirtualna z systemem Ubuntu. Jako miejsce do przechowywania danych treningowych i testowych zostały wykorzystane dwa dyski SSD NVME o pojemności 1TB każdy, spięte w macierz RAID 0. Pozwoliło na uzyskanie akceptowalnej prędkości odczytu i zapisu, a także odpowiedniej pojemności.
-
-Taka konfiguracja sprzętowa pozowoliła na efektywne trenowanie i testowanie dwóch modeli równolegle, gdzie przy ograniczonym czasie było to niezbędne.
+Za względu na duży koszt obliczeniowwy przeprowadznych eksperymentów, został zbudowany dedykowany serwer. Opisywana praca skupia się na implementacji wieloprocesowych narzędzi. Z tego powodu serwer został wyposażony w procesor Intel Xeon E5-2686v4 z 128GB pamięci RAM. Do trenowania modeli zostały wykorzystane dwie karty graficzne: Nvidia RTX 3080 12gb oraz NVIDIA Tesla v100 16gb. Jako miejsce do przechowywania danych treningowych i testowych zostały użyte dwa dyski SSD NVME o pojemności 1TB każdy spięte w macierz RAID 0. Pozwoliło to na uzyskanie odpowiedniej prędkości odczytu i zapisu. Całość funkcjonowała pod kontrolą systemu Proxmox opartego na dystrybucji Debian, który umożliwia łatwe zarządzanie zasobami sprzętowymi poprzez interfejs webowy.
+Powyższa konfiguracja sprzętowa pozowoliła na efektywne trenowanie i testowanie dwóch modeli równolegle, co było kluczowe dla realizacji eksperymentów w założonym czasie.
 
 \hspace{0.5cm}
 
@@ -15,12 +14,12 @@ Taka konfiguracja sprzętowa pozowoliła na efektywne trenowanie i testowanie dw
 
 \newpage
 
-\section*{Wykorzystane biblioteki}
-Język Python, który jest interpretowanym językiem wysokiego poziomu. W celu zapewnienia akceptowalnej wydajności, wymagane jest używanie bibliotek napisanych w językach niższego poziomu.
-W celu implementacji przedstawionego rozwiązania zostały wykorzystane między innymi:
+\section*{Najważniejsze biblioteki}
+Język Python jest językiem interpretowanym. Aby zapewnić wydajność niezbędną w obliczeniach numerycznych, konieczne jest wykorzystanie bibliotek, których kluczowe moduły zostały zaimplementowane w wydajnych językach niższego poziomu. W procesie implementacji rozwiązania wykorzystano między innymi następujące pakiety:
 
 \begin{itemize}
-	\item \textbf{NumPy}: służy do obliczeń naukowych. Umożliwia bardzo szybkie operacje na macierzach i wektorach.
-	\item \textbf{Matplotlib}: umożliwia tworzenie wykresów i wizualizację danych.
+	\item \textbf{NumPy}: podstawowa biblioteka do obliczeń numerycznych. Umożliwia efektywną pracę na wektorach i macierzach.
+	\item \textbf{Matplotlib}: umożliwia wizualizację danych w formie wykresów.
 	\item \textbf{PyTorch}: biblioteka do implementacji sieci neuronowych. Umożliwia elastyczne tworzenie architektur sieci oraz łatwe wykorzystanie GPU.
+	\item \textbf{Chess}: dedykowana biblioteka do obsługi gry w szachy. Umożliwia reprezentację planszy oraz tworzenie i walidację ruchów.
 \end{itemize}
