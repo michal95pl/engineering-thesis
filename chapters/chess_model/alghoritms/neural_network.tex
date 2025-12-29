@@ -150,3 +150,25 @@ W tym punkcie pochodna funkcji przyjmuje wartość zerową. W rezultacie dla war
 \includegraphics[width=1\textwidth]{images/SiLu.png}
 \caption{Po lewej porównanie SiLu oraz ReLu. Po prawej pochodna SiLu (dSiLu) oraz funkcja sigmoidalna. Źródło: \cite{SiLu}}
 \end{figure}
+
+\section{Policy head}
+W fazie końcowej, sieć rozdziela się na dwie specjalizacyjne głowice wyjściowe. Pierwsza z nich to \textit{policy head}. Zajmuje się ona tworzeniem rozkładu prawdopodobieństwa ruchów. Podobnie jak w warstwie rezydualnej, składa się z warstwy konwolucyjnej, normalizacji batchowej oraz funkcji aktywacji SiLu. Następnie dane są spłaszczane i przechodzą przez warstwę gęstą, której wyjście odpowiada liczbie możliwych ruchów w szachach. W rezultacie otrzymujemy wektor logitów, który jest następnie przekształcany w rozkład prawdopodobieństwa za pomocą funkcji softmax. Dodatkowo jest użyty dropout w celu poprawy generalizacji modelu.
+
+\newpage
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.7\textwidth]{images/policy_head.png}
+\caption{Architektura policy head}
+\end{figure}
+
+\section{Value head}
+Value head jest drugą głowicą wyjściową sieci neuronowej. Jej zadaniem jest przewidzenie rozkładu prawdopodobieństwa wyniku partii. Jest zbudowana bardzo podobnie do policy head, z tą różnicą że zawiera jedną warstwę gęstą więcej. Jest to spowodowane tym, że przewidywanie wyniku partii jest bardzo złożonym zadaniem. Dodatkowo w porównaniu do policy warstwa gęsta posiada znacznie mniej parametrów, dzięki czemu mimo większej liczby warstw, nie wpływa to znacząco na złożoność obliczeniową modelu.
+
+\hspace{2cm}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.9\textwidth]{images/valueHead.png}
+\caption{Architektura value head}
+\end{figure}
