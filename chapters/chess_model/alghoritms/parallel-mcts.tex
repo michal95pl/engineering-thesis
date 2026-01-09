@@ -1,31 +1,31 @@
 % W ATCH THE U NOBSERVED : A S IMPLE A PPROACH TO PARALLELIZING MONTE CARLO TREE SEARCH
-\setcounter{chapter}{2}
+\setcounter{chapter}{3}
 
 \chapter{Zrównoleglenie MCTS}
-Celem zrównoleglenia MCTS jest przyśpieszenie wykonywania algorytmu poprzez lepsze wykorzystanie dostępnych zasobów sprzętowych, przy jednoczesnym zachowaniu jakości podejmowanych decyzji. W tym rozdziale zostanie przestawiony i rozwiązany problem z perspektywy CPU oraz GPU.
+Celem zrównoleglenia MCTS jest przyśpieszenie wykonywania algorytmu poprzez lepsze wykorzystanie dostępnych zasobów sprzętowych przy jednoczesnym zachowaniu jakości podejmowanych decyzji. W tym rozdziale zostanie przedstawiony i rozwiązany problem z perspektywy CPU oraz GPU.
 
 \hspace{3cm}
 
 \section{Metoda batchowania danych}
 Frameworki do pracy z sieciami neuronowymi, takie jak wykorzystywany PyTorch, są zoptymalizowane do pracy na partiach danych. Do teraz drzewo MCTS wykonywało się w pełni sekwencyjnie, czego skutkiem było przetwarzanie tylko jednej próbki danych przez sieć neuronową.
 
-W celu lepszego wykorzystania GPU, została wykorzystana metoda batchowania danych zaproponowana przez Tristana Cazenave. Koncepcja polega na dodawaniu odpowiedniej liczby liści do bufora, tak aby można było je przetworzyć w jednej partii przez sieć neuronową. Po otrzymaniu wyników z sieci, drzewo jest aktualizowane poprzez wsteczną propagację. 
+Ulepszona koncepcja polega na dodawaniu odpowiedniej liczby liści do bufora, tak aby można było je przetworzyć w jednej partii przez sieć neuronową. Po otrzymaniu wyników z sieci, drzewo jest aktualizowane poprzez wsteczną propagację. 
 
-Głównym problemem jest brak aktualizacji statystyk drzewa w trakcie dodawania liści do bufora. Powoduje to, że podczas selekcji algorytm PUCT nie ma aktualnych informacji o stanie drzewa, przez co wybierana jest ta sama ścieżka. 
+Głównym problemem jest brak aktualizacji statystyk drzewa w trakcie dodawania liści do bufora. Powoduje to, że podczas etapu selekcji algorytm PUCT nie ma aktualnych informacji o stanie drzewa przez co wybierana jest ta sama ścieżka. 
 
-Można spróbować naiwnie rozwiązać ten problem poprzez blokowanie liści dodanych do bufora, wymuszając wybór innego liścia, aczkolwiek nie jest to optymalne rozwiązanie. Mimo takiego zabiegu, wybierane są różne liście, jednakże posiadające tego samego rodzica, co można zaobserwować na rysunku 3.1. Czerwone strzałki prezentują wybraną najlepszą ścieżkę. Liść oznaczony numerem 6 został dodany do bufora i jest zablokowany. Na fioletowo została oznaczona ścieżka prowadząca do kolejnego liścia, który zostanie dodany do bufora. Taka metoda w praktyce jest szybsza, aczkolwiek znacznie mniej efektywana niż sekwencyjna wersja MCTS.
+Można spróbować naiwnie rozwiązać ten problem poprzez blokowanie liści dodanych do bufora, wymuszając tym samym wybór innego liścia, aczkolwiek nie jest to optymalne rozwiązanie. Mimo takiego zabiegu wybierane są różne liście, jednakże posiadające tego samego rodzica, co można zaobserwować na rysunku 4.1. Taka metoda w praktyce jest szybsza, aczkolwiek znacznie mniej efektywana niż wersja sekwencyjna.
 
 \newpage
 
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.8\textwidth]{images/mcts-naive-batch.png}
-\caption{Naiwna metoda batchowania danych}
+\caption{Naiwna metoda batchowania danych. Czerwone strzałki reprezentują wybraną najlepszą ścieżkę. Liść oznaczony numerem 6 został dodany do bufora i jest zablokowany. Na fioletowo została oznaczona ścieżka prowadząca do kolejnego liścia, który zostanie dodany do bufora.}
 \end{figure}
 
 \section{Fundament idealnego algorytmu równoległego}
 
-W artykule "On effective parallelization of Monte Carlo Tree Search" autorzy definiują warunki konieczne dla statystyk węzłów, które muszą zostać spełnione, aby równoległe drzewo było nie tyle co szybsze, ale również tak samo skuteczne jak sekwencyjne:
+W artykule "On effective parallelization of Monte Carlo Tree Search" \cite{EffectiveParallelMCTS} autorzy definiują warunki konieczne dla statystyk węzłów, które muszą zostać spełnione aby równoległe drzewo było nie tyle co szybsze, ale również tak samo skuteczne jak sekwencyjne:
 
 \begin{equation}
 \begin{aligned}
@@ -37,7 +37,7 @@ W artykule "On effective parallelization of Monte Carlo Tree Search" autorzy def
 \noindent gdzie:
 \begin{description}
   \item[$\overline{N}(s,a)$] - zmodyfikowana liczba odwiedzin akcji $a$ w stanie $s$
-  \item[$N(s,a)$] - liczba odwiedzeń akcji $a$ w stanie $s$
+  \item[$N(s,a)$] - liczba odwiedzin akcji $a$ w stanie $s$
   \item[$O(s,a)$] - liczba liści w których trwają obliczenia dla akcji $a$ w stanie $s$
   \item[$G(s,a)$] - (ang. Gap) błąd estymacji wartości akcji $a$ w stanie $s$
   \item[$\overline{Q}(s,a)$] - zmodyfikowana wartość akcji $a$ w stanie $s$ w algorytmie równoległym
@@ -46,18 +46,16 @@ W artykule "On effective parallelization of Monte Carlo Tree Search" autorzy def
 
 \vspace{0.5cm}
 
-Powyższe warunki konieczne pokazują, że idealny algorytm równoległy musi w trakcie oczekiwania na wynik obliczeń modyfikować tymczasowo modyfikować statystyki węzłów. Powinny być one idealnie oszacowane, tak aby drzewo w każdej chwili czasowej dysponowało aktualnymi informacjami o swoim stanie. W przeciwnym razie, algorytm opierający swoje działanie na nieaktualnych wartościach dokonywałby nieoptymalnych wyborów węzłów co można było zaobserwować na rysunku 3.1.
+Powyższe warunki konieczne pokazują, że idealny algorytm równoległy musi w trakcie oczekiwania na wynik obliczeń, modyfikować tymczasowo statystyki węzłów. Powinny one być idealnie oszacowane, tak aby drzewo w każdej chwili czasowej dysponowało aktualnymi informacjami o swoim stanie. W przeciwnym razie, algorytm opierający swoje działanie na nieaktualnych wartościach dokonywałby nieoptymalnych wyborów węzłów, co można było zaobserwować na rysunku 4.1.
 
-W praktyce spełnienie pierwszego warunku jest stosunkowo proste i zostało to rozwiązane przez implementacje WU-UCT, natomiast drugi warunek jest bardzo trudny do zrealizowania, gdyż wymaga on przewidzenia wartości akcji.
-
-\newpage
+W praktyce spełnienie pierwszego warunku jest stosunkowo proste i zostało to rozwiązane przez implementacje WU-UCT, natomiast drugi warunek jest bardzo trudny do zrealizowania, gdyż wymaga przewidzenia wartości akcji.
 
 \section{WU-UCT - Watch the Unobserved}
-Metoda WU-UCT (ang. Watch the Unobserved) ma na celu spełnienie pierwszego z warunków koniecznych przedstawionych w równaniu (3.1). Wprowadza ona dodatkową zmienną $O(s,a)$ przechowującą liczbę liści w których trwają obliczenia dla akcji $a$ w stanie $s$. W momencie wyboru liścia do dodania do bufora, zmienna ta jest zwiększana o 1 dla każdej akcji na wybranej ścieżce. Po otrzymaniu wyniku, zmienna ta jest zmniejszana o 1 w trakcie wstecznej propagacji.
+Metoda WU-UCT ma na celu spełnienie pierwszego z warunków koniecznych przedstawionych w równaniu (4.1). Wprowadza ona dodatkową zmienną $O(s,a)$, która przechowuje informację o liczbie liści, dla których trwają obecnie obliczenia w akcji $a$ w stanie $s$. W momencie wyboru liścia, wartość tej zmiennej jest inkrementowana dla każdego węzła na wybranej ścieżce. Po otrzymaniu wyniku, jest ona dekrementowana w trakcie wstecznej propagacji.
 
-Zmienna $O(s,a)$ jest wykorzystywana w zmodyfikowanym wzorze PUCT do uzupełnienia informacji o liczbie odwiedzin węzła. W efekcie, algorytm dopasowywuje wartość eksploracji w zależności od liczby trwających obliczeń węzłów potomnych, gdzie większa liczba obliczeń skutkuje mniejszą wartością eksploracji. Dzięki temu, algorytm unika podążania za ścieżkami, które są już w trakcie obliczeń, a skupia się na eksploracji innych części drzewa.
+Zmienna $O(s,a)$ jest wykorzystywana w zmodyfikowanym wzorze PUCT do uzupełnienia informacji o liczbie odwiedzin węzła. W efekcie algorytm dynamicznie koryguje wartość eksploracji w zależności od liczby trwających obliczeń węzłów potomnych. Wyższa wartość $O(s,a)$ skutkuje mniejszą wartością eksploracji. Pozwala to na unikanie podążania za ścieżkami, w których trwają już obliczenia, skupiając się na eksploracji innych części drzewa.
 
-Mechanizm blokowania przedstawiony w podrozdziale 3.1, pełni teraz rolę tylko zabezpieczenia. Zapewnia on, że do bufora nie zostanie dodany ten sam liść. W najgorszym przypadku dodamy najlepszy liść tego samego rodzica, który nie znajduje się w buforze.
+Mechanizm blokowania przedstawiony w podrozdziale 4.1, pełni teraz tylko rolę zabezpieczenia. Zapewnia on, że do bufora nie zostanie dodany ten sam liść. W najgorszym przypadku zostanie dodany najlepszy liść tego samego rodzica, który nie znajduje się w buforze.
 
 \vspace{1cm}
 
@@ -120,13 +118,13 @@ WU-UCT:
 \newpage
 
 \section{Wady batchowania danych}
-Przedstawione podejście batchowania danych rozwiązuje problem niewykorzystania optymalnie GPU. Jednakże po rozwiązaniu problemu, narodziły się kolejne.
+Przedstawione podejście batchowania danych rozwiązuje problem nieoptymalnego wykorzystania GPU. Jednakże po rozwiązaniu problemu narodziły się kolejne.
 
-Algorytm WU-UCT spełnia tylko pierwszy z warunków koniecznych przedstawionych w równaniu (3.1). Drugi warunek, mówiący o idealnym oszacowaniu wartości akcji, nadal nie jest spełniony. W praktyce oznacza to, że drzewo MCTS nie posiada idealnych informacji o swoim stanie, przez co wraz ze wzrostem rozmiaru bufora zwiększa się bias algorytmu.
+Algorytm WU-UCT spełnia tylko pierwszy z warunków koniecznych przedstawionych w równaniu (4.1). Drugi warunek mówiący o idealnym oszacowaniu wartości akcji nadal nie jest spełniony. W praktyce oznacza to, że drzewo MCTS nie posiada idealnych informacji o swoim stanie, przez co wraz ze wzrostem rozmiaru bufora zwiększa się bias algorytmu.
 
-Kolejnym występującym problemem jest sam język Python. Jest on językiem interpretowanym, przez co niespodziewanym wąskim gardłem stały się najprostsze operacjie utrzymujące drzewo. Szczególnie jest to widoczne przy etapie ekspansji, gdzie czas wykonania wynosi $O(n * m)$, gdzie $n$ to wielkość bufora, a $m$ to liczba możliwych ruchów z danego stanu (średnio ok 45). Taka pętla jest znacznie wolniejsza niż sama sieć neuronowa, przez co zwiększanie rozmiaru bufora nie przekłada się na duży wzrost szybkości wykonania.
+Kolejnym występującym problemem jest sam język Python. Jest on językiem interpretowanym, przez co niespodziewanym wąskim gardłem stały się najprostsze operacje utrzymujące drzewo. Szczególnie jest to widoczne przy etapie ekspansji, gdzie czas wykonania wynosi $O(n * m)$, gdzie $n$ to wielkość bufora, a $m$ to liczba możliwych ruchów z danego stanu (średnio ok 45). Taka pętla jest znacznie wolniejsza niż sama sieć neuronowa, przez co zwiększanie rozmiaru bufora nie przekłada się na duży wzrost szybkości wykonania.
 
-W efekcie powyższych problemów, zwiększanie rozmiaru bufora nie tylko nie przekłada się na liniową poprawę czasu wykonanie, ale również pogarsza się jakość podejmowanych decyzji. todo: dodać wykres różnicy regret między sek a batch
+W efekcie powyższych problemów, zwiększanie rozmiaru bufora nie tylko nie przekłada się na widoczną poprawę czasu wykonania, ale również pogarsza się jakość podejmowanych decyzji.
 
 \begin{figure}[!h]
 \centering
@@ -138,22 +136,22 @@ W efekcie powyższych problemów, zwiększanie rozmiaru bufora nie tylko nie prz
       xlabel={Wielkość bufora},
       ylabel={Czas [s]},
       xtick={1,2,3,4,5,6,7,8},
-      ymin=55,
-      ymax=130,
+      ymin=70,
+      ymax=140,
       ymajorgrids=true,
       xmajorgrids=true,
       legend style={at={(0.02,0.98)},anchor=north west,font=\small},
       mark size=2.5pt
   ]
     \addplot+[blue, thick, mark=o] coordinates {
-      (1,125.73)
-      (2,87.72)
-      (3,75.23)
-      (4,68.89)
-      (5,65.69)
-      (6,62.93)
-      (7,61.69)
-      (8,60.07)
+      (1,135.98)
+      (2,101.66)
+      (3,89.9)
+      (4,85.26)
+      (5,81.39)
+      (6,78.43)
+      (7,76.0)
+      (8,74.75)
     };
   \end{axis}
 \end{tikzpicture}
@@ -161,36 +159,35 @@ W efekcie powyższych problemów, zwiększanie rozmiaru bufora nie tylko nie prz
 \label{fig:metric-iteracje}
 \end{figure}
 
-Testy wydajnościowe przedstawione na wykresie zostały przeprowadzone na procesorze i7-11800H oraz GPU RTX 3060. Można łatwo zauważyć, że najoptymalniejszym rozmiarem bufora jest 2. Na poniższym wykresie można zauważyć, że WU-UCT utrzymuje lekką przewagę, aczkolwiek rozgrywka kończy się remisem.
+Testy wydajnościowe przedstawione na wykresie zostały przeprowadzone na procesorze i7-11800H oraz GPU RTX 3060. Na wykresie 4.3 można zaobserwować, że wraz ze wzrostem wielkości bufora, różnica czasu wykonania maleje. 
 
+Jako optymalną wartość rozmiaru bufora wybrano 2, gdyż daje ona bardzo duży zysk czasowy, a jednocześnie brak spełenia drugiego warunku koniecznego nie ma dużego wypływu na jakość podejmowanych decyzji. Na wykresie 4.4 można zauważyć, że używając tego samogo czasu na oblieczenie ruchu, algorytm z buforem o rozmiarze 2 osiąga przewagę nad sekwencyjną wersją.
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.55\textwidth]{images/comparison_wuUCT.png}
-\caption{Porównanie blokowania z WU-UCT}
+\includegraphics[width=0.55\textwidth]{images/buffor-comp.png}
+\caption{Rozgrywka między sekwencyjnym MCTS a MCTS z buforem o rozmiarze 2 przy tym samym czasie wykonania. Rozgrywka została oceniona przez silnik Stockfish.}
 \end{figure}
 
 
 \newpage
 
 \section{Wieloprocesowy MCTS}
-Do tej pory opisywane metody skupiały się na większym wykorzystaniu GPU. Jednakże dużym ograniczeniem stanowią operacje na drzewie, które są wykonywane przez CPU. Dzisiejsze procesory posiadają stosunkowo dużą liczbę rdzeni, które można wykorzystać do przyśpieszenia obliczeń. 
+Do tej pory opisywane metody skupiały się na większym wykorzystaniu GPU. Jednakże dużym ograniczeniem stanowią operacje na drzewie wykonywane przez CPU. Dzisiejsze procesory posiadają stosunkowo dużą liczbę rdzeni, które można wykorzystać do przyśpieszenia obliczeń. 
 
 Do zrównoleglenia algorytmu zostały użyte wszystkie omówione wcześniej techniki, takie jak batchowanie danych z buforem o rozmiarze 2 oraz WU-UCT. Działanie samej równoległości opiera się na metodzie tree parallelization, gdzie jedno drzewo jest współdzielone między wszystkimi workerami. 
 
 \subsection{Struktura drzewa}
-Użyty język Python jest językiem jednowątkowym, przez co koniecznym było użycie wieloprocesowości. Głównym problemem w takim podejściu jest brak współdzielonej pamięci programu między procesami. Z tego powodu konieczne było wydzielenie fragmentu pamięci dynamicznej do przechowywania współdzielonej struktury drzewa. Z poziomu Pythona ma ona postać zwykłych bajtów, przez co możliwe są tylko dwa rozwiązania przechowywania obiektowej struktury: spłaszczenie, lub użycie serializacji i deserializacji. Z oczywistych względów wydajnościowych jak i prostoty implementacji, została wybrana pierwsza metoda.
+Język Python jest językiem jednowątkowym przez co koniecznym było użycie wieloprocesowości. Głównym problemem w takim podejściu jest brak współdzielonej pamięci programu między procesami. Z tego powodu konieczne było wydzielenie fragmentu pamięci dynamicznej do przechowywania współdzielonej struktury drzewa. Z poziomu Pythona ma ona postać zwykłych bajtów, przez co możliwe są tylko dwa rozwiązania przechowywania obiektowej struktury: spłaszczenie, lub użycie serializacji wraz z deserializacją. Z oczywistych względów wydajnościowych jak i prostoty implementacji została wybrana pierwsza metoda.
 
-Ze względu na fakt, że mamy dostęp do bloku bajtów, spłaszczona struktura musi być przechowywana w tablicy. Ogólne działanie drzewa jest oparte na podobnej zasadzie co wersja obiektowa. Z taką różnicą, że zamiast operować na referencjach, operujemy na indeksach tablicy. Każdy węzeł zawiera informacje o id rodzicu oraz dzieci. Statystyki drzewa są przechowywane identycznie jak w wersji obiektowej. Różnica pojawia się tylko przy stanie gry, czyli planszy. Zamiast serializować i deserializować obiekt BoardPlus, plansza jest przechowywana w znacznnie bardziej kompaktowej formie, jako tablica charów oraz zmiennej bool. Kolejno opisują one stan planszy w formacie FEN oraz perspektywa rozgrywki. Format ten był prezentowany w pierwszym rozdziale.
+Ze względu na fakt, że używając współdzielonaj pamięci jest tylko dostęp do bloku bajtów, spłaszczona struktura musi być przechowywana w tablicy. Ogólne działanie drzewa jest oparte na podobnej zasadzie co wersja obiektowa. Z taką różnicą, że zamiast operować na referencjach, operujemy na indeksach tablicy. Każdy węzeł zawiera informacje o id rodzicu oraz dzieci. Statystyki drzewa są przechowywane identycznie jak w wersji obiektowej. Różnica pojawia się tylko przy stanie gry, czyli planszy. Zamiast serializować i deserializować obiekt BoardPlus, plansza jest przechowywana w znacznie bardziej kompaktowej formie, jako tablica charów oraz zmiennej bool. Opisują one kolejno stan planszy w formacie FEN oraz perspektywę rozgrywki. Format FEN był opisywany w pierwszym rozdziale.
 
-Każda zmienna została dobrana pod kątem minimalizacji zużycia pamięci. Przykładowo liczba odwiedzin jest przechowywana jako 16 bitowa liczba całkowita bez znaku, gdyż w praktyce nie zdarza się aby liczba odwiedzin przekroczyła 65535 oraz była ujemna. Dodatkowo ze względu na użycie tablic, wszystkie rozmiary tablic są ustalane przed rezerwacją pamięci. Rozmiar drzewa jest obliczany na podstawie wzoru 3.3, gdzie brana jest pod uwagę maksymalna liczba dzieci na węzeł oraz symulacji. Maksymalna liczba dzieci jest stała i wynosi 100, co jest wartością bardzo bezpieczną, gdyż średnia liczba możliwych ruchów w szachach wynosi około 45.
+Każda zmienna została dobrana pod kątem minimalizacji zużycia pamięci. Przykładowo liczba odwiedzin jest przechowywana jako 16 bitowa liczba całkowita bez znaku, gdyż w praktyce nie zdarza się aby liczba odwiedzin przekroczyła 65535 oraz była ujemna. Dodatkowo ze względu na użycie tablic, wszystkie ich rozmiary są ustalane przed rezerwacją pamięci. Rozmiar drzewa jest obliczany na podstawie wzoru 4.3, gdzie brana jest pod uwagę maksymalna liczba dzieci na węzeł oraz liczba symulacji. Maksymalna liczba dzieci jest stała i wynosi 100, co jest wartością bardzo bezpieczną, gdyż średnia liczba możliwych ruchów w szachach wynosi około 45.
 
 \vspace{0.5cm}
 
 \begin{equation}
 \operatorname{treeSize} \,=\, \operatorname{maxChildrenPerNode} \times \operatorname{simNumber} + 1
 \end{equation}
-
-\newpage
 
 \begin{lstlisting}[
     language=Python,
@@ -204,8 +201,10 @@ Każda zmienna została dobrana pod kątem minimalizacji zużycia pamięci. Przy
     numbers=none
 ]
 tree_dtype = np.dtype([
-    ('parent_id', np.int32), # -1 for root
-    ('children', np.uint32, MAX_CHILDREN_PER_NODE), # avg max children per node is ~(30-55)
+    # -1 for root
+    ('parent_id', np.int32),
+    # avg max children per node is ~(30-55)
+    ('children', np.uint32, MAX_CHILDREN_PER_NODE), 
     ('children_count', np.uint8),
     ('fen', 'S100'),
     ('changed_perspective', np.bool_),
@@ -215,13 +214,14 @@ tree_dtype = np.dtype([
     ('prior', np.float32),
     ('unobserved_samples', np.uint32),
     ('is_locked', np.bool_),
-    ('result', np.int8) # result for terminated states. 2 for not terminated
+    # result for terminated states. 2 for not terminated
+    ('result', np.int8)
 ])
 \end{lstlisting}
 
 \vspace{0.5cm}
 
-Powyższa struktura uwzględnia również zmienną result, która przechowuje wynik gry w przypadku zakończonych stanów. Wartość ta jest dodawana w momencie ekspancji. Pozwala to uniknąć niepotrzebnej kolejnej zamiany fen na obiekt klasy BoardPlus bezpośrednio po selekcji.
+Powyższa struktura uwzględnia również zmienną result przechowującą wynik gry dla zakończonych stanów. Wartość ta jest dodawana w momencie ekspancji. Pozwala to uniknąć niepotrzebnej kolejnej zamiany fen na obiekt klasy BoardPlus bezpośrednio po selekcji.
 
 \vspace{2cm}
 
@@ -234,9 +234,9 @@ Powyższa struktura uwzględnia również zmienną result, która przechowuje wy
 \newpage
 
 \subsection{Działanie wieloprocesowego MCTS}
-Ostatnim wyzwaniem było zaprojektowanie procesów wykonawczych wraz z ich synchronizacją, gdzie każdy z nich ma za zadnie wykonanie takiej samej liczby symulacji. Trzeba wziąć pod uwagę fakt, że wszystkie operacje będą odbywały się na jednym drzewie. Szczególnie jest to problematyczne w początkowej fazie, gdzie przez dostępność małego zbioru liści, może dojść do sytuacji gdzie wiele procesów będzie podążało tą samą ścieżką.
+Ostatnim wyzwaniem było zaprojektowanie procesów wykonawczych wraz z ich synchronizacją, gdzie każdy z nich ma za zadnie wykonanie takiej samej liczby symulacji. Trzeba wziąć pod uwagę fakt, że wszystkie operacje będą odbywały się na jednym drzewie. Szczególnie jest to problematyczne w początkowej fazie, gdzie przez dostępność małego zbioru liści, może dojść do sytuacji gdzie wiele procesów będzie podążało tą samą ścieżką osiągając ten sam liść.
 
-Bardzo dobrze ilustruje to przypadek widoczny na rysunku 3.6, gdzie algorytm zaczyna swoje działanie od korzenia. Trzeba zapewnić, że tylko jeden proces będzie mógł go rozwinąć, a pozostałe będą musiały poczekać. Obsługa takiego przypadku jest zaprezentowana na rysunku 3.7, gdzie algorytm od razu sprawdza czy są dostępne liście. Jeżeli nie, to czeka, albo przetwarza swój bufor niezależnie od rozmiaru. Dzięki takiemu zabiegowi może zlikwidować blokujące węzły w drzewie i umożliwić sobie oraz innym procesom dalszą pracę.
+Bardzo dobrze ilustruje to przypadek widoczny na rysunku 4.6, gdzie algorytm po inicjalizacji zaczyna wykonywać pierwszą selekcję zaczynając od korzenia. Naturalnie jest tylko jeden korzeń w drzwie, więc trzeba wówczas zapewnić że tylko jeden proces będzie mógł go rozwinąć, a pozostałe będą musiały czekać. Obsługa takiego przypadku jest zaprezentowana na rysunku 4.7, gdzie algorytm od razu sprawdza czy są dostępne liście. Jeżeli nie, to czeka, albo przetwarza swój bufor niezależnie od rozmiaru. Wywołanie przetwarzania bufora w takim przypadku ma na celu uniknięcie sytuacji, gdzie procesy same się blokują czekając na odblokowanie liści w buforach.
 
 \begin{figure}[h]
 \centering
@@ -245,7 +245,7 @@ Bardzo dobrze ilustruje to przypadek widoczny na rysunku 3.6, gdzie algorytm zac
 \end{figure}
 
 
-Kolejnym bardzo ważnym aspektem w równoległości jest integralność danych. Zapewniona jest ona przez użycie dwóch blokad. Oznaczone odpowiednio jasnobrązowym oraz zielonym kolorem na rysunku 3.7 i 3.8. Widoczny duży jasnobrązowy blok odpowiada za zapewnienie atomowości operacji wyboru liścia. Dzięki temu tylko jeden proces może wykonać od razu: wybór liścia, aktualizacje tymczasowej statystyki oraz zablokowanie. Unikamy w ten sposób sytuacji, gdzie dwa procesy przetwarzają ten sam liść.
+Następnym bardzo ważnym aspektem w równoległości jest integralność danych. Zapewniona jest ona przez użycie dwóch blokad. Oznaczone odpowiednio jasnobrązowym oraz zielonym kolorem na rysunku 4.7 i 4.8. Widoczny duży jasnobrązowy blok odpowiada za zapewnienie atomowości operacji wyboru liścia. Dzięki temu tylko jeden proces może wykonać kolejno: wybór liścia, aktualizacje tymczasowej statystyki oraz zablokowanie. Unikamy w ten sposób sytuacji, gdzie dwa procesy przetwarzają ten sam liść.
 \begin{figure}[h]
 \centering
 \includegraphics[width=1\textwidth]{images/multiproc-mcts.png}
@@ -254,9 +254,23 @@ Kolejnym bardzo ważnym aspektem w równoległości jest integralność danych. 
 
 \newpage
 
-Na rysunku 3.7 jest przedstawiona również druga blokada. Odpowiada ona za integralność zmiennej przechowującej ostatni zapisany indeks w tablicy drzewa. Jest to ważne podczas ekspansji, gdzie nowy węzeł jest dodawany na kolejnym indeksie wskazywanym przez tę zmienną.
+Na rysunku 4.7 jest przedstawiona również druga blokada. Odpowiada ona za integralność zmiennej przechowującej ostatni zapisany indeks w tablicy drzewa. Jest to istotne podczas ekspansji, gdzie nowy węzeł jest tworzony na indeksie wskazywanym przez tę zmienną.
 \begin{figure}[h]
 \centering
 \includegraphics[width=1\textwidth]{images/buffor-schematic.png}
 \caption{Schemat przetwarzania bufora}
+\end{figure}
+
+\section*{Ewaluacja MCTS}
+Najbardziej obiektywnym sposobem oceny działania całego algorytmu szachowego jest porównanie go z innym. Wybrany został Stockfish ze względu na jego popularność oraz wsparcie biblioteki \textit{chess} ułatwiającej integrację.
+
+Porównanie polega na rozegraniu podanej liczby partii pomiędzy dwoma silnikami. Białe figury są reprezentowane przez Stockfish, a czarne przez opisywany model. Główną miarą oceny jest przeżywalność, czyli liczba ruchów w danej partii. Dodatkowo w celu uzyskania bardziej szczegółowych danych, stockfish w każdej rundzie podaje ocenę pozycji dla czarnych figur. Mieści się ona w przedziale od -1000 do 1000, gdzie skrajne wartości oznaczają mat.
+W pliku konfiguracyjnym użytkownik za pomocą wartości \textit{stockfish\_gen\_moves} może ustawić ilość generowanych ruchów przez Stockfish w danej turze. Spośród nich jest losowany ostateczny ruch. Taki mechanizm pozwala na znaczne obniżenie poziomu trudności silnika. Było to szczególnie bardzo istotne w początkowej fazie rozwoju modelu, gdzie jego skuteczność była niska. Obecnie ze względu na dobrą jakość implementowanego algorytmu, wartość ta jest ustawiona na 1, co oznacza że Stockfish nie jest osłabiany.
+
+Na wykresach porównawczych jest również uwzględniony wynik losowego modelu, który w każdej turze wybiera losowy (legalny) ruch. Pełni on rolę poziomu odniesienia.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.6\textwidth]{images/stockfish.png}
+\caption{Wykres przeżywalności modelu względem Stockfish}
 \end{figure}

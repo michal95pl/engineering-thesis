@@ -1,8 +1,8 @@
 \section*{Środowisko}
-Przedstawione rozwiązanie zostało zaimplementowane w języku Python. Podyktowane to było przede wszystkim dużą ilością dostępnych wysokopoziomowych bibliotek, które znacznie przyśpieszają opracowanie i testowanie algorytmów.
+Przedstawione rozwiązanie zostało zaimplementowane w języku Python. Podyktowane to było przede wszystkim dużą liczbą dostępnych wysokopoziomowych bibliotek, które w znacznym stopniu przyśpieszają opracowanie i testowanie algorytmów.
 
-Za względu na duży koszt obliczeniowwy przeprowadznych eksperymentów, został zbudowany dedykowany serwer. Opisywana praca skupia się na implementacji wieloprocesowych narzędzi. Z tego powodu serwer został wyposażony w procesor Intel Xeon E5-2686v4 z 128GB pamięci RAM. Do trenowania modeli zostały wykorzystane dwie karty graficzne: Nvidia RTX 3080 12gb oraz NVIDIA Tesla v100 16gb. Jako miejsce do przechowywania danych treningowych i testowych zostały użyte dwa dyski SSD NVME o pojemności 1TB każdy spięte w macierz RAID 0. Pozwoliło to na uzyskanie odpowiedniej prędkości odczytu i zapisu. Całość funkcjonowała pod kontrolą systemu Proxmox opartego na dystrybucji Debian, który umożliwia łatwe zarządzanie zasobami sprzętowymi poprzez interfejs webowy.
-Powyższa konfiguracja sprzętowa pozowoliła na efektywne trenowanie i testowanie dwóch modeli równolegle, co było kluczowe dla realizacji eksperymentów w założonym czasie.
+Ze względu na duży koszt obliczeniowy przeprowadzanych eksperymentów, został skonfigurowany dedykowany serwer dostosowany do obsługi wieloprocesowych narzędzi. Został on wyposażony w procesor Intel Xeon E5-2686v4 wraz z 128GB pamięci RAM. Do trenowania modeli wykorzystano dwie karty graficzne: Nvidia RTX 3080 12gb oraz NVIDIA Tesla v100 16gb. W celu przechowywania danych treningowych i testowych zostały użyte dwa dyski SSD NVME o pojemności 1TB każdy, połączone w macierz RAID 0. Umożliwiło to na uzyskanie odpowiedniej prędkości odczytu i zapisu. Całość funkcjonowała pod kontrolą systemu Proxmox, który umożliwia łatwe zarządzanie zasobami sprzętowymi poprzez interfejs webowy.
+Powyższa konfiguracja sprzętowa pozwoliła na efektywne trenowanie i testowanie dwóch modeli równolegle, co było kluczowe dla realizacji eksperymentów w założonym czasie.
 
 \hspace{0.5cm}
 

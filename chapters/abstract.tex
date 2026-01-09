@@ -1,6 +1,26 @@
 \section*{Streszczenie}
 
-Celem niniejszej pracy jest przedstawienie działania oraz implementacji równoległego silnika szachowego opartego na algorytmie przeszukiwania drzewa Monte Carlo wspomaganego siecią neuronową. Zostanie przedstawiony proces przetwarzania danych szachowych wraz z niezbędną modyfikacją biblioteki szachowej.
-W pracy zostaną omówione ulepszenia zarówno sieci neuronowej jak i samego MCTS, które zostały wprowadzane na przestrzeni ostatnich kilku lat. Na końcu zostaną przedstawione wyniki ewaluacji samej sieci neuronowej oraz porównanie opisywanego silnika z silnikiem Stockfish.
+Celem niniejszej pracy jest zaprojektowanie oraz implementacja równoległego silnika szachowego, opartego na algorytmie przeszukiwania drzewa Monte Carlo, wspomaganego głęboką siecią neuronową. Rozwiązanie inspirowane jest architekturą AlphaZero, wzbogaconą o współczesne techniki uczenia głębokiego.
 
-\textbf{Słowa kluczowe} – monte carlo tree search, sieć neuronowa, szachy, wieloprocesowość
+Do wytrenowania sieci neuronowej wykorzystano zbiór danych z Lichess Elite Database.
+Zaimplementowana sieć neuronowa wykorzystuje architekturę rezydualną rozszerzoną o bloki Squeeze and Excitation oraz funkcję aktywacji SiLU.
+
+Kolejnym kluczowym aspektem pracy jest zrównoleglenie algorytmu MCTS. W celu efektywnego wykorzystania zasobów GPU oraz CPU zastosowano metodę wieloprocesowego Tree Parallelization w połączeniu z techniką Watch the Unobserved oraz mechanizmem batchowania danych.
+
+\hspace{1cm}
+
+\textbf{Słowa kluczowe} – szachy, sieci neuronowe, Monte Carlo Tree Search, wieloprocesowość, WU-UCT, ResNet, Squeeze-and-Excitation, SiLU, batchowanie danych.
+
+\hspace{2cm}
+
+\section*{Abstract}
+
+The goal of this engineering thesis is the design and implementation of a parallel chess engine based on the Monte Carlo Tree Search algorithm supported by a deep neural network. The solution is inspired by the AlphaZero architecture, enriched with modern deep learning techniques.
+
+The project is based on data from the Lichess Elite Database, which was used to train a neural network predicting moves and evaluating positions. The implemented neural network utilizes a residual architecture extended with Squeeze-and-Excitation blocks and the SiLU activation function.
+
+Another key aspect of the thesis is the parallelization of the MCTS algorithm within the Python environment. To effectively utilize GPU and CPU resources, a multiprocess Tree Parallelization method was applied, combined with the Watch the Unobserved technique and a data batching mechanism.
+
+\hspace{1cm}
+
+\textbf{Keywords} – chess, neural networks, Monte Carlo Tree Search, multiprocessing, WU-UCT, ResNet, Squeeze-and-Excitation, SiLU, data batching.

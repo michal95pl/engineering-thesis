@@ -66,7 +66,8 @@
   {10pt}{\Huge}
 \titlespacing*{\chapter}{0pt}{5pt}{20pt}
 
-
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{3}
 % Set page margins
 \geometry{top=0cm, bottom=2cm, left=2cm, right=2cm}
 
@@ -132,7 +133,11 @@ Nr albumu s27643
 Warszawa, luty, 2026
 \end{center}
 
+
 \newgeometry{top=2cm, bottom=2cm, left=2.5cm, right=2.5cm}
+
+\tableofcontents
+
 \include{chapters/abstract}
 \include{chapters/introduction}
 \include{chapters/environment}
@@ -140,8 +145,7 @@ Warszawa, luty, 2026
 \include{chapters/chess_model/alghoritms/monte_carlo_tree_search}
 \include{chapters/chess_model/alghoritms/neural_network}
 \include{chapters/chess_model/alghoritms/parallel-mcts}
-\include{chapters/chess_model/evaluation}
-\include{chapters/chess_model/gui}
+\include{chapters/chess_model/architecture}
 
 \bibliographystyle{plain}
 \bibliography{bibliography}

@@ -1,14 +1,16 @@
-\setcounter{chapter}{3}
+\setcounter{chapter}{2}
 
 \chapter{Architektura sieci neuronowej}
-Architektura sieci neuronowej wykorzystywana w opisywanym rozwiązaniu jest inspirowana modelem użytym w \textit{AlphaZero}. Aczkolwiek od czasu powstania modelu od \textit{DeepMind} mineło już kilka lat, gdzie w tym czasie powstało kilka nowych technik i ulepszeń. Zostaną one przybliżone w tym rozdziale.
+Architektura sieci neuronowej wykorzystywana w opisywanym rozwiązaniu jest inspirowana modelem \textit{AlphaZero}. Aczkolwiek od jego publikacji mineło już kilka lat, gdzie w tym czasie powstało kilka nowych technik i ulepszeń, które zostaną przybliżone w niniejszym rozdziale.
 
 \section{Architektura}
-Jak zostało wspomniane w poprzednim rozdziale, sieć neuronowa jest kręgosłupem algorytmu MCTS. To właśnie ona odpowiada za stworzenie dwóch rozkładów prawdopodobieństwa na podstawie dostarczanych planszy. Odpowiednio dla ruchów oraz wyniku partii. W związku z tym, podobnie jak ma to miejsce w \textit{AlphaZero}, sieć posiada jedno wejście oraz dwie grupy wyjść. Wejściem są zakodowane trzy plansze szachowe tworzące spójną sekwencję czasową. Pozwala to sieci na lepsze zrozumienie gry, gdyż widzi płynny przebieg rozgrywki, a nie jedynie pojedyńczy stan. Również zyskujemy większą różnorodność danych. W przypadku dostarczania tylko jednego stanu, jest znacznie większe prawdopodobieństwo powtarzania się takich samych danych treningowych, gdzie sieć może mieć problem z uogólnieniem wiedzy.
+Jak zostało wspomniane w poprzednim rozdziale, sieć neuronowa stanowi kręgosłup algorytmu MCTS. To właśnie ona odpowiada za wyznaczenie dwóch rozkładów prawdopodobieństwa na podstawie dostarczanych plansz. W związku z tym, podobnie jak ma to miejsce w \textit{AlphaZero}, sieć posiada jedno wejście oraz dwie grupy wyjść. 
 
-Dzięki dwóm grupom wyjść, sieć jest mniej obciążająca obliczeniowo niż dwie oddzielne sieci. Ponadto taka sieć we wspólnym trzonie jest zmuszona do generalizacji cech rozgrywki, co przyczynia się do lepszej regaluaryzacji modelu \cite{AlphaGoZero}. Dopiero po rozdzieleniu na dwie części, sieć specjalizuje się w swoich zadanich.
+Wejściem są zakodowane trzy plansze szachowe tworzące spójną sekwencję czasową. Pozwala to sieci na lepsze zrozumienie gry, gdyż widzi ona płynny przebieg rozgrywki, a nie jedynie pojedyńczy stan. Dodatkowo zwiększa to różnorodność danych treningowych. W przypadku dostarczania tylko jednego stanu, istnieje znacznie większe prawdopodobieństwo powtarzania się tych samych danych, przez co sieć może mieć trudności z ougólnieniem cech.
 
-Na rysunku 3.1 przedstawiony jest diagram architektury sieci neuronowej. Zawiera on warstwy rezydualne, SE oraz dwie głowice wyjściowe. W następnej części tego rozdziału zostaną one szczegółowo omówione.
+Dzięki zastosowaniu dwóch grup wyjść jedna sieć jest mniej obciążająca obliczeniowo niż dwie osobne sieci. Ponadto sieć ze wspólnym trzonem jest zmuszona do generalizacji cech rozgrywki, co przyczynia się do lepszej regaluaryzacji modelu \cite{AlphaGoZero}. Dopiero po rozdzieleniu na dwie części sieć specjalizuje się w realizacji przypisanych zadań.
+
+Na rysunku 3.1 przedstawiony jest diagram architektury sieci neuronowej. Zawiera on warstwy rezydualne, SE oraz dwie głowice wyjściowe. W dalszej części tego rozdziału zostaną one szczegółowo omówione.
 
 
 \newpage
@@ -23,11 +25,13 @@ Na rysunku 3.1 przedstawiony jest diagram architektury sieci neuronowej. Zawiera
 
 \section{Warstwa rezydualna}
 
-Najważniejszym elementem przedstawianej architektury są warstwy rezydualne. Rozwiązują one oproblem z degradacją gradientu. Objawia się on przez nasyconą dokładność danych treningowych, która nie jest w stanie się poprawić. Nie jest to spowodowane przeuczeniem, lecz głębokością samej sieci. Przez co wbrew intuicji, płytszy model może osiągnąć lepsze wyniki.
+Kluczowym elementem przedstawianej architektury są warstwy rezydualne. Rozwiązują one problem z degradacją gradientu. Zjawisko to objawia się nasyconą dokładnością danych treningowych, której nie udaje się poprawić. Nie jest to spowodowane przeuczeniem, lecz głębokością samej sieci. Przez co wbrew intuicji, płytszy model może osiągnąć lepsze wyniki.
 
-W celu rozwiązania tego problemu, powstała koncepcja warstw rezydualnych. Zmieniają one sposób przepłwu informacji przez sieć. Zamiast uczyć się bezpośrednio funkcji $H(x)$, warstwa rezydualna uczy się różnicy $F(x) = H(x) - x$. Wyjściem z warstwy jest suma $F(x) + x$. W rezultacie sieć uczy się jedynie zmiany sygnału, a nie całej funkcji. Bardzo dużą zaletą tego podejścia jest stosunkowe proste stworzenie funkcji tożsamościowej poprzez wyzerowanie wag. W ten sposób autorzy w swojej pracy, pokazali że sieci rezydualne nie tworzą większego błędu niż płytsze modele \cite{ResNet}.
+W celu rozwiązania tego problemu, powstała koncepcja warstw rezydualnych. Zmieniają one sposób przepływu informacji przez sieć. Zamiast uczyć się bezpośrednio funkcji $H(x)$, warstwa rezydualna uczy się różnicy $F(x) = H(x) - x$. Wyjściem z warstwy jest suma $F(x) + x$. W rezultacie sieć uczy się jedynie zmiany sygnału, a nie całej funkcji. Bardzo dużą zaletą tego podejścia jest stosunkowe proste stworzenie funkcji tożsamościowej poprzez wyzerowanie wag. W ten sposób autorzy w swojej pracy, pokazali że sieci rezydualne nie tworzą większego błędu niż płytsze modele \cite{ResNet}.
 
-Na rysunku 4.2 przedstawiona jest standardowa architektura warstwy rezydualnej. Składa sie ona z 2 warstw konwolucyjnych wpieranych przez warstwy normalizacji batchowej oraz funkcje aktywacji.
+W opisywanym modelu można ustawić liczbę warstw rezydualnych w pliku konfiguracyjnym pod nazwą \textit{num\_residual\_blocks}.
+
+Na rysunku 3.2 przedstawiona jest standardowa architektura warstwy rezydualnej. Składa sie ona z 2 warstw konwolucyjnych wpieranych przez warstwy normalizacji batchowej oraz funkcje aktywacji.
 
 \hspace{0.5cm}
 
@@ -38,22 +42,24 @@ Na rysunku 4.2 przedstawiona jest standardowa architektura warstwy rezydualnej. 
 \end{figure}
 
 \subsection{Warstwa konwolucyjna}
-Warstwa konwolucyjna jest fundamentem wykorzystywanej sieci neuronowej. To ona odpowiada za analizę oraz generalizację cech planszy szachowej. Pierwotnie została zaprojektowana do analizy obrazów, jednak równie dobrze sobie radzi z danymi przestrzennymi, takimi jak plansza szachowa. 
+Warstwa konwolucyjna stanowi fundament architektury wykorzystywanej sieci neuronowej. To ona odpowiada za analizę oraz generalizację cech planszy szachowej. Pierwotnie została zaprojektowana do analizy obrazów, jednak równie dobrze sobie radzi z danymi przestrzennymi, takimi jak plansza szachowa. 
 
-Nazwa pochodzi od operacji matematycznej zwanej konwolucją \footnote{W bibliotekach do uczenia maszynowego używa się podobnej funkcji zwanej cross-correlation, która działa identycznie jak konwolucja, ale nie odwraca kernela \cite{DeepLearning}.}. Polega ona na przesuwaniu kernela po wejściowej macierzy i wykonywaniu iloczynu skalarnego między filtrem, a fragmentem obrazu. Wynikiem jest mapa cech, która zawiera wyodrębnione cechy z oryginalnego obrazu. Dodatkowo, dzięki temu że kernel jest mniejszy niż obraz, to nie jest on w pełni połączony z wejściem, tak jak ma to miejsce w warstwach gęstych. Tym sposobem nie tylko ograniczamy liczbę parametrów, ale również sieć uczy się lokalnych wzorców \cite{DeepLearning}. W przypadku szachów mogą to być różne wzorce pozycyjne. 
+Nazwa pochodzi od operacji matematycznej zwanej konwolucją \footnote{W bibliotekach do uczenia maszynowego używa się podobnej funkcji zwanej cross-correlation, która działa identycznie jak konwolucja, ale nie odwraca kernela \cite{DeepLearning}.}. Operacja ta polega na przesuwaniu jądra po macierzy wejściowej i obliczaniu iloczynu skalarnego między filtrem a fragmentem danych. Wynikiem jest mapa cech, która zawiera wyodrębnione cechy z oryginalnego obrazu. Dodatkowo, dzięki temu że kernel jest mniejszy niż obraz, to nie jest on w pełni połączony z wejściem, tak jak ma to miejsce w warstwach gęstych. Tym sposobem nie tylko ograniczona jest liczba parametrów, ale również sieć uczy się lokalnych wzorców \cite{DeepLearning}. W przypadku szachów mogą to być specyficzne układy figur.
 
-Jak było wspomniane przy opisie przetwarzania danych, sieć konwolucyjna poprzez przesuwanie kernela, jest odporna na translacje. Oznacza to, że niezależnie od położenia figury na planszy, sieć jest w stanie rozpoznać jej cechy. Jednakże, o ile radzi sobie z translacją, to ma problem z rotacją, przez co w przetwarzaniu danych konieczne było ujednolicenie pozycji planszy do jednej orientacji \cite{DeepLearning}.
+Jak wspomniano przy opisie przetwarzania danych, sieć konwolucyjna poprzez przesuwanie kernela, jest odporna na translacje. Oznacza to, że niezależnie od położenia figury na planszy, sieć jest w stanie rozpoznać jej cechy. Jednakże, o ile radzi sobie z translacją, to ma problem z rotacją, przez co w przetwarzaniu danych konieczne było ujednolicenie pozycji planszy do jednej orientacji \cite{DeepLearning}.
 
-W przedstawionym modelu wykorzystywane są warstwy konwolucyjne o standardowym rozmiarze kernela $3 \times 3$ oraz stride 1 w celu zachowania rozmiaru obrazu. Podobnie jak w AlphaZero \cite{AlphaZero}, nie zostały wykorzystne warstwy poolingowe. Głównym powodem jest fakt, że o ile są w stanie bardziej ougólnić cechy, to traci się przez to informacje przestrzenne oraz małe detale obrazu \cite{DeepLearning}.
+W prezentowanym modelu wykorzystywane są warstwy konwolucyjne o standardowym rozmiarze kernela $3 \times 3$ oraz stride równym 1 w celu zachowania rozmiaru obrazu. Podobnie jak w AlphaZero \cite{AlphaZero}, nie zostały wykorzystane warstwy poolingowe. Głównym powodem tej decyzji jest fakt, że o ile są w stanie bardziej uogólnić cechy, to powodują utratę informacji przestrzennych oraz drobnych detali obrazu \cite{DeepLearning}.
 
-Dodatkowo należy wspomnieć, że wraz z głębokością sieci, rośnie pole recepcyjne. Oznacza to, że neurony w głebszych warstwach analizują ze sobą coraz to większe fragmenty obrazu wejściowego \cite{DeepLearning}.
+Warto również zauważyć, że wraz z głębokością sieci, rośnie pole recepcyjne. Oznacza to, że neurony w głebszych warstwach analizują ze sobą coraz to większe fragmenty obrazu wejściowego \cite{DeepLearning}.
+
+Liczbę filtrów w modelu sieci można ustawić w pliku konfiguracyjnym pod kluczami \textit{num\_backbone\_filters}, \textit{num\_policy\_filters} oraz \textit{num\_value\_filters}.
 
 \hspace{0.5cm}
 
 \subsection{Normalizacja batchowa}
-Normalizacja batchowa jest techniką adaptacyjnej reparametryzacji danych. Jej celem jest eliminacja zjawiska wewnętrznego przesunięcia kowariancji (ang. \textit{internal covariate shift}) \cite{BatchNormalization}. Objawia się ono poprzez zmieniający się rozkład wyjścia z warstw sieci neuronowej podczas adaptacji parametrów w trakcie uczenia. Innymi słowy, warstwy sieci są zależne od siebie nawzajem, przez co zmiana wag w jednej z nich wpływa na pozostałe. Prowadzi to do problemów ze stabilnością oraz doborem optymalnego współczynnika uczenia, skutkując często eksplodującymi lub zanikającymi gradientami.
+Normalizacja batchowa jest techniką adaptacyjnej reparametryzacji danych. Jej celem jest ograniczenie zjawiska wewnętrznego przesunięcia kowariancji \cite{BatchNormalization}. Zjawisko to polega na ciągłej zmianie rozkładu sygnału wyjściowego z warstw sieci neuronowej podczas adaptacji parametrów w trakcie uczenia. Innymi słowy, warstwy sieci są zależne od siebie nawzajem, przez co zmiana wag w jednej z nich wpływa na następne. Prowadzi to do problemów ze stabilnością oraz doborem optymalnego współczynnika uczenia, skutkując często eksplodującymi lub zanikającymi gradientami.
 
-Jeżeli dla przykładu rozważymy sieć neuronową bez biasu oraz z tożsamościową funkcją aktywacji, to w sytuacji, gdy wagi są większe od 1, wyjście sieci po aktualizacji parametrów zmieni się znacząco z powodu mnożenia wag (wzór 4.1). Oznacza to, że nawet mała zmiana wag w jednej warstwie może spowodować dużą zmianę na wyjściu sieci, szczególnie w głębokich modelach \cite{BatchNormalization}, nawet przy zastosowaniu małego współczynnika uczenia \cite{DeepLearning}.
+Aby zilustrować to zjawisko, można rozważyć sieć neuronową pozbawioną biasu oraz z tożsamościową funkcją aktywacji. W sytuacji, gdy wartości wag są większe od jedności, wyjście sieci po aktualizacji parametrów zmieni się znacząco z powodu mnożenia wag (wzór 3.1). Oznacza to, że nawet mała zmiana wag w jednej warstwie może spowodować dużą zmianę na wyjściu sieci, szczególnie w głębokich modelach \cite{BatchNormalization}, mimo zastosowania małego współczynnika uczenia \cite{DeepLearning}.
 
 \hspace{0.5cm}
 
@@ -85,7 +91,7 @@ gdzie $\mu$ to średnia, $\sigma$ to odchylenie standardowe, a $\epsilon$ to ma�
 \caption{Normalizacja. Dane są centrowane i skalowane, dzięki czemu zachowują swój kształt, lecz zmieniają zakres wartości.}
 \end{figure}
 
-Poniższe wzory prezentują mechanizm wstecznej propagacji błędu w opisanej wyżej prostej sieci. Ukazują one źródło problemu z niestabilnością gradientu oraz sposób, w jaki normalizacja batchowa go rozwiązuje. W równaniu 4.4 przedstawiony jest wzór na gradient w warstwie $n$ po wykonaniu różniczkowaniu wzoru 4.3. Składa się on z trzech czynników: pochodnej funkcji błędu, błędu z warstw wyższych oraz wejścia z warstwy poprzedniej ($h_{n-1}$). To właśnie ten ostatni człon jest kluczowy. We wzorze 4.5 widać, że sygnał wejściowy $h_{n-1}$ zależy od iloczynu wag warstw poprzednich. W rezultacie, w sieci bez wykonywania normalizacji, może dojść do eksplozji lub zaniku gradientu, gdy wagi są odpowiednio duże lub małe.
+Poniższe wzory prezentują mechanizm wstecznej propagacji błędu w opisanej wyżej prostej sieci. Ukazują one źródło problemu z niestabilnością gradientu oraz sposób, w jaki normalizacja batchowa go rozwiązuje. W równaniu 3.4 przedstawiony jest wzór na gradient w warstwie $n$ po wykonaniu różniczki wzoru 3.3. Składa się on z trzech czynników: pochodnej funkcji błędu, błędu z warstw wyższych oraz wyjścia z warstwy poprzedniej ($h_{n-1}$). To właśnie ten ostatni człon jest kluczowy. We wzorze 3.5 można zauważyć, że sygnał wejściowy $h_{n-1}$ zależy od iloczynu wag warstw poprzednich. W rezultacie, w sieci bez wykonywania normalizacji, może dojść do eksplozji lub zaniku gradientu, gdy wagi są odpowiednio duże lub małe.
 
 Zastosowanie normalizacji na $h_{n-1}$ eliminuje ten problem, niwelując zależność sygnału od skali wag. Prowadzi to do nietypowego zjawiska, w którym większe wagi skutkują mniejszymi gradientami \cite{BatchNormalization}. Dzięki temu sieć uczy się stabilniej, co pozwala na użycie większego współczynnika uczenia.
 
@@ -115,16 +121,31 @@ Należy jednak zauważyć, że po znormalizowaniu wyjścia z warstwy, sieć moż
 \newpage
 
 \section{Squeeze and Excitation} 
-Kolejnym elementem widocznym na diagramie 4.1 są bloki \textit{Squeeze and Excitation}. Bardzo podobne rozwiązanie zostało zastosowane w LolaChessZero {\cite{lc0_nn}} Ich zadaniem jest adaptacyjna rekalibracja kanałów cech na wyjściu z warstwy konwolucyjnej. Dzięki temu niwelują one ograniczenia splotu, który analizuje jedynie lokalne wzorce, traktując zależności między kanałami w sposób niejawny \cite{SqueezeAndExcitation}. Ograniczenie to wynika przede wszystkim z użycia niewielkiego filtra, który operuje na małym fragmencie wejścia, a następnie sumuje wyniki ze wszystkich kanałów.
+Kolejnym elementem widocznym na diagramie 4.1 są bloki \textit{Squeeze and Excitation}. Bardzo podobne rozwiązanie zostało zastosowane w LolaChessZero. {\cite{lc0_nn}} Ich zadaniem jest adaptacyjna rekalibracja kanałów cech na wyjściu z warstwy konwolucyjnej. Dzięki temu niwelują one ograniczenia splotu, który analizuje jedynie lokalne wzorce traktując zależności między kanałami w sposób niejawny \cite{SqueezeAndExcitation}. Ograniczenie to wynika przede wszystkim z użycia niewielkiego filtra, który operuje na małym fragmencie wejścia, a następnie sumuje wyniki ze wszystkich kanałów.
 
-W celu ulepszenia warstw konwolucyjnych, blok \textit{Squeeze and Excitation} składa się z dwóch etapów: \textit{Squeeze} oraz \textit{Excitation}. Pierwszy z nich ma na celu stworzenie deskryptora globalnych cech dla każdego kanału. Osiąga się to poprzez zastosowanie globalnego uśredniania, które redukuje wymiary kanału do pojedynczej wartości.
+W celu poprawienia reprezentacji cech, blok \textit{Squeeze and Excitation} składa się z dwóch etapów: \textit{Squeeze} oraz \textit{Excitation}. Pierwszy z nich ma na celu stworzenie deskryptora globalnych cech dla każdego kanału. Jest to osiągnięte poprzez zastosowanie globalnego uśredniania, które redukuje wymiary każdego z kanałów do pojedynczej wartości.
 
-Natomiast zadaniem \textit{Excitation} jest wychwycenie nieliniowych zależności między kanałami oraz wygenerowanie wag dla każdego z nich. Jest to realizowane za pomocą dwóch warstw gęstych rozdzielonych funkcją SiLu. Na wyjściu jest funkcja sigmoidalna z której wychodzą wartości w przedziale [0,1]. Dodatkowo, w celu ograniczenia liczby parametrów oraz poprawy generalizacji modelu, wprowadzono współczynnik redukcji \cite{SqueezeAndExcitation}. Zmniejsza on wyjście pierwszej warstwy, po czym druga warstwa przywraca pierwotną liczbę kanałów na wyjściu bloku.
-
+Natomiast zadaniem \textit{Excitation} jest wychwycenie nieliniowych zależności między kanałami oraz wygenerowanie wag dla każdego z nich. Jest to realizowane za pomocą dwóch warstw gęstych rozdzielonych funkcją SiLu. Na wyjściu jest funkcja sigmoidalna która zwraca wartości w przedziale [0,1]. Dodatkowo, w celu ograniczenia liczby parametrów oraz poprawy generalizacji modelu, wprowadzono współczynnik redukcji \cite{SqueezeAndExcitation}. Zmniejsza on wyjście pierwszej warstwy, po czym druga warstwa przywraca pierwotną liczbę kanałów na wyjściu bloku. W prezentowanym modelu współczynnik ten jest ustawiony na 8, co przy liczbie 64 kanałów daje 8 neuronów w warstwie ukrytej.
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.2\textwidth]{images/squeezeArchi.png}
 \caption{Blok Squeeze and Excitation}
+\end{figure}
+
+\newpage
+
+Porównując wykresy loss dla modeli z oraz bez bloków SE, można zauważyć różnicę w szybkości zbieżności. Model z SE osiąga lepszy wynik w krótszym czasie dla głowicy value.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.9\textwidth]{images/bez-se.png}
+\caption{Wykres loss dla modelu bez bloków SE. Wykres przedstawia co drugą epokę.}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.9\textwidth]{images/nomal-model.png}
+\caption{Wykres loss dla modelu z blokami SE. Wykres przedstawia co drugą epokę.}
 \end{figure}
 
 \newpage
@@ -140,9 +161,9 @@ Ostatnim elementem architektury sieci jest funkcja aktywacji SiLU. Matematycznie
 
 \hspace{0.5cm}
 
-Dla dużych wartości dodatnich funkcja zachowuje się niemal identycznie jak ReLU, natomiast dla wartości ujemnych dąży do zera \cite{SiLu}. Jednakże, nie jest ona funkcją monotonicznie rosnącą. W punkcie $x \approx -1.28$ posiada minimum.
+Dla dużych wartości dodatnich funkcja ta zachowuje się niemal identycznie jak ReLU, natomiast dla wartości ujemnych dąży do zera \cite{SiLu}. Jednakże, nie jest ona funkcją monotonicznie rosnącą. W punkcie $x \approx -1.28$ posiada minimum.
 
-W tym punkcie pochodna funkcji przyjmuje wartość zerową. W rezultacie dla wartości mniejszych niż $-1.28$, funkcja wykazuje charakter samoregulujący. W tym obszarze pochodna jest ujemna, co powoduje, że podczas wstecznej propagacji błędu odwracany jest znak gradientu. Skutkiem tego jest hamowanie wzrostu wag o dużej wartości bezwzględnej. Taki mechanizm pozwala zapobiec wyłączeniu się neuronu. Należy jednak zaznaczyć, że obszar ten jest ograniczony, więc przy wystąpieniu odpowiednio dużego błędu, wprowadzenie neuronu w stan trwałej saturacji jest nadal możliwe, jak w przypadku funkcj ReLu.
+W tym punkcie pochodna funkcji przyjmuje wartość zerową. W rezultacie dla wartości mniejszych niż $-1.28$, funkcja wykazuje charakter samoregulujący. W tym obszarze pochodna jest ujemna, co powoduje, że podczas wstecznej propagacji błędu odwracany jest znak gradientu. Skutkiem tego jest hamowanie wzrostu wag o dużej wartości bezwzględnej. Taki mechanizm pozwala zapobiec wyłączeniu się neuronu. Należy jednak zaznaczyć, że obszar ten jest ograniczony, więc przy wystąpieniu odpowiednio dużego błędu, wprowadzenie neuronu w stan trwałej saturacji jest nadal możliwe, jak w przypadku funkcji ReLu.
 
 
 \begin{figure}[h]
@@ -151,10 +172,27 @@ W tym punkcie pochodna funkcji przyjmuje wartość zerową. W rezultacie dla war
 \caption{Po lewej porównanie SiLu oraz ReLu. Po prawej pochodna SiLu (dSiLu) oraz funkcja sigmoidalna. Źródło: \cite{SiLu}}
 \end{figure}
 
-\section{Policy head}
-W fazie końcowej, sieć rozdziela się na dwie specjalizacyjne głowice wyjściowe. Pierwsza z nich to \textit{policy head}. Zajmuje się ona tworzeniem rozkładu prawdopodobieństwa ruchów. Podobnie jak w warstwie rezydualnej, składa się z warstwy konwolucyjnej, normalizacji batchowej oraz funkcji aktywacji SiLu. Następnie dane są spłaszczane i przechodzą przez warstwę gęstą, której wyjście odpowiada liczbie możliwych ruchów w szachach. W rezultacie otrzymujemy wektor logitów, który jest następnie przekształcany w rozkład prawdopodobieństwa za pomocą funkcji softmax. Dodatkowo jest użyty dropout w celu poprawy generalizacji modelu.
+\hspace{0.5cm}
+
+Bardzo znaczącą różnice między SiLu, a ReLu widać przedewszystkim na wykresie loss dla głowicy value. Na zbiorze testowym model z ReLu jest niestabilny. Można również zauważyć, że nie jest on w stanie osiągnąć lepszego wyniku niż 0.880, podczas gdy SiLu schodzi do ok 0.865.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.9\textwidth]{images/ReLU-model.png}
+\caption{Wykres loss dla modelu z funkcją ReLu. Wykres przedstawia co drugą epokę.}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.9\textwidth]{images/nomal-model.png}
+\caption{Wykres loss dla modelu z funkcją SiLu. Wykres przedstawia co drugą epokę.}
+\end{figure}
 
 \newpage
+
+\section{Policy head}
+W fazie końcowej, sieć rozdziela się na dwie specjalizacyjne głowice wyjściowe. Pierwsza z nich to \textit{policy head}. Zajmuje się ona stworzeniem rozkładu prawdopodobieństwa ruchów. Składa się z warstwy konwolucyjnej, normalizacji batchowej oraz funkcji aktywacji SiLu. Następnie dane są spłaszczane i przechodzą przez warstwę gęstą, której wyjście odpowiada liczbie możliwych ruchów w szachach. W rezultacie otrzymywany jest wektor logitów o rozmiarze 4992, który jest następnie przekształcany w rozkład prawdopodobieństwa za pomocą funkcji softmax. Dodatkowo jest użyty dropout w celu poprawy generalizacji modelu.
+
 
 \begin{figure}[h]
 \centering
@@ -163,7 +201,7 @@ W fazie końcowej, sieć rozdziela się na dwie specjalizacyjne głowice wyjści
 \end{figure}
 
 \section{Value head}
-Value head jest drugą głowicą wyjściową sieci neuronowej. Jej zadaniem jest przewidzenie rozkładu prawdopodobieństwa wyniku partii. Jest zbudowana bardzo podobnie do policy head, z tą różnicą że zawiera jedną warstwę gęstą więcej. Jest to spowodowane tym, że przewidywanie wyniku partii jest bardzo złożonym zadaniem. Dodatkowo w porównaniu do policy warstwa gęsta posiada znacznie mniej parametrów, dzięki czemu mimo większej liczby warstw, nie wpływa to znacząco na złożoność obliczeniową modelu.
+Value head jest drugą głowicą wyjściową sieci neuronowej. Jej zadaniem jest stworzenie rozkładu prawdopodobieństwa wyniku partii. Jest zbudowana bardzo podobnie do policy head, z tą różnicą że zawiera jedną warstwę gęstą więcej. Jest to spowodowane tym, że przewidywanie wyniku partii jest bardzo złożonym zadaniem. Dodatkowo w porównaniu do policy warstwa gęsta posiada znacznie mniej parametrów, dzięki czemu mimo większej liczby warstw, nie wpływa to znacząco na złożoność obliczeniową modelu. Wyjście z tej głowicy jest o rozmiarze 3, co odpowiada opisywanym wcześniej mechanizmowi WDL.
 
 \hspace{2cm}
 
@@ -171,4 +209,67 @@ Value head jest drugą głowicą wyjściową sieci neuronowej. Jej zadaniem jest
 \centering
 \includegraphics[width=0.9\textwidth]{images/valueHead.png}
 \caption{Architektura value head}
+\end{figure}
+
+\section{Funkcja straty}
+Celem trenowania sieci neuronowej jest minimalizacja funkcji straty, która składa się z dwóch składników: policy loss oraz value loss. Każdy z nich jest entropią krzyżową między przewidywaniami sieci, a rzeczywistymi wartościami z danych treningowych. Dodatkowo trzeba zaznaczyć, że rozmiar wyjścia z obu głowic modelu znacznie się różni. W przypadku policy head jest to 4992 możliwych ruchów, natomiast w value jest są to jedynie 3 możliwe wyniki partii. W związku z tym, aby zrównoważyć wpływ obu składników na funkcję straty, value loss jest mnożony przez współczynnik 2. Taki dobór współczynnika okazał sie optymalny, gdyż większe skupienie na głowicy value powoduje przeuczenie oraz nieznaczne pogorszenie się wyników dla policy.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.9\textwidth]{images/x3-net.png}
+\caption{Funkcja loss ze współczynnikiem 3. Wykres przedstawia co drugą epokę.}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.9\textwidth]{images/x4-net.png}
+\caption{Funkcja loss ze współczynnikiem 4. Wykres przedstawia co drugą epokę.}
+\end{figure}
+
+
+\newpage
+
+\section{Przygotowanie danych do sieci neuronowej}
+
+Proces uczenia dużych sieci neuronowych odbywa się zazwyczaj na wielu rozłącznych podzbiorach danych, zwanych batchami. Takie podejście pozwala na efektywne wykorzystanie pamięci, zwłaszcza przy dużych zbiorach danych. Jednakże, aby ten proces przebiegał efektywnie, konieczne jest zapewnienie odpowiedniej szybkości przygotowywania danych treningowych równolegle z procesem uczenia. W tym celu została stworzona specjalna klasa \textit{NetDataset}, która wykorzystując gotowy moduł \textit{DataLoader} z biblioteki PyTorch zarządza przygotowywaniem oraz dostarczaniem danych do sieci wykorzystując wieloprocesowość.
+
+W trakcie uczenia modelu działają równolegle cztery procesy odpowiedzialne za przygotowanie danych. Ich ilość można dostosować w pliku konfiguracyjnym pod wartością "number\_of\_dataset\_processes". Każdy z nich dysponuje buforem zawierającym określoną liczbę ruchów. Jego wielkość można dostosować pod kluczem "buffer\_size". Zadaniem każdego z procesów jest utrzymanie wypełnionego buforu, poprzez ciągłe ładowanie plików \textit{.rdg}. Dzięki takiemu podejściu, dane są odpowiednio zróżnicowane poprzez ich losowe mieszanie w buforze.
+
+Przed ostatecznym zwróceniem danych do procesu uczenia, są one odpowiednio kodowane do formatu zrozumiałego dla sieci neuronowej. Plansza jest rozszerzana do 13 kanałów, gdzie każdy z nich reprezentuje unikalną figurę oraz puste pole. Na końcu są one spłaszczane do jednego wymiaru oraz konwertowane do tensora. Natomiast ruch oraz wygrana są konwertowane tylko do tensorów.
+
+Należy też zauważyć, że procesy działają niezależnie oraz równolegle. W celu uniknięcia powtórzeń danych, każdy z nich ma przypisaną swoją pulę plików do przetworzenia.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.9\textwidth]{images/data-loader.png}
+\caption{Struktura działania procesu ładowania danych.}
+\end{figure}
+
+\section{Ewaluacja modelu}
+Końcowy model sieci neuronowej składa się z 14 bloków rezydualnych, gdzie każdy z nich posiada 64 filtry. Głowica police zawiera 4 filtry, natomiast głowica value 32. Rozmiar bufora danych jest ustawiony na 10,000. Model został wytrenowany na 26 epokach z użyciem współczynnika uczenia równego 0.001 oraz batch size równy 2048.
+
+Na wykresie loss można dostrzec, że model na danych testowych dla głowicy policy osiągnął wartość ok 1.4, co jest bardzo dobrym wynikiem. Krzywa loss dla danych testowych jest niżej niż dla danych treningowych, co jest spowodowane użyciem warstw dropout.
+
+Głowica value osiągnęła przeciętny wynik, jednakże biorąc pod uwagę złożoność zadania jest on akceptowalny. Trzeba mieć na uwadze, że ocena planszy bazuje na końcowym wyniku partii, który w części przypadku jest nie możliwy do przewidzenia na podstawie samej pozycji, szczególnie w początkowej fazie rozgrywki.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.9\textwidth]{images/nomal-model.png}
+\caption{Wykres loss dla końcowego modelu. Wykres przedstawia co drugą epokę.}
+\end{figure}
+
+Macierz pomyłek dla głowicy value podobnie jak wykres loss wskazuje na problem z dokładnością predykcji. Widać również problem z niezbalansowaniem klas, gdzie gier zakończonych remisem jest znacznie mniej niż wygranych, bądź przegranych. Pomimo niedostatecznej jakości głowicy value, model jest wspomagany przez drzewo MCTS, które w dużej mierze poprawia jakość predykcji.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8\textwidth]{images/confusion-matrix.png}
+\caption{Macierz pomyłek dla głowicy value.}
+\end{figure}
+
+Wykres dokładności top-10 dla głowicy policy, pokazuje że głowica policy bardzo dobrze sobie radzi z przewidywaniem ruchów. W 81 procentach przypadków prawidłowy ruch znajduje się wśród 3 najwyższych przewidywań sieci. Miara ta oddaje znacznie lepiej jakość modelu, niż zwykła dokładność oparta o najwyższy wynik, gdyż w szachach nie istnieje tylko jeden prawidłowy ruch. Często istnieje kilka dobrych posunięć, które następnie są analizowane przez drzewo MCTS.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.7\textwidth]{images/top-k-acc.png}
+\caption{Wykres dokładności top-10 dla głowicy policy.}
 \end{figure}

@@ -1,23 +1,21 @@
-\setcounter{chapter}{2}
+\setcounter{chapter}{1}
 
-\chapter{Algorytm}
-Zadaniem algorytmu w szachach jest znalezienie najlepszego ruchu w danej pozycji poprzez przewidywanie strategii przeciwnika. Słowo "strategia" jest kluczowe, gdyż odnosi się do planowania rozgrywki w przód, która ma na celu osiągnięcie celu w przyszłości, a nie w obecnym ruchu. Do tego celu idealnie nadają się algorytmy drzewiaste, które próbują przewidzieć przyszłość poprzez analizę kombinacji ruchów swoich, jak i przeciwnika. Takim algorytmem jest Monte Carlo Tree Search, który w połączeniu z siecią neuronową może stworzyć bardzo silny program do gry w szachy.
+\chapter{Algorytm Monte Carlo Tree Search}
+Zadaniem algorytmu w szachach jest znalezienie najlepszego ruchu w danej pozycji poprzez przewidywanie strategii przeciwnika. Słowo "strategia" jest kluczowe, gdyż odnosi się do planowania rozgrywki w przód, w celu realizacji zamierzeń w przyszłości, a nie tylko w obecnym stanie. Do wykonania tego zadania służą algorytmy drzewiaste analizujące różne kombinacje ruchów graczy. Takim algorytmem jest Monte Carlo Tree Search, który w połączeniu z siecią neuronową jest bardzo skutecznym algorytmem do gry w szachy.
 
-\section{Drzewo monte carlo}
-Algorytm Monte Carlo Tree Search jest heurystycznym algorytmem przeszukiwania zbioru stanów. Jego największą zaletą jest iteracyjność, dzięki temu w zależności od dostępnej mocy obliczeniowej (czasu) możemy tworzyć dowolnie duże drzewo. Dodatkowo po każdej iteracji jest w stanie zwrócić najlepszy dotychczasowy ruch. W podstawowej wersji nie wymaga skomplikowanej funkcji oceniającej dany stan. Działanie algorytmu opiera się na czterech etapach: selekcji, ekspansji, symulacji oraz wstecznej propagacji.
+\section{Podstawowa wersja MCTS}
+Algorytm Monte Carlo Tree Search jest heurystycznym algorytmem przeszukiwania przestrzeni stanów. Jego kluczową zaletą jest iteracyjność, dzięki czemu w zależności od dostępnej mocy obliczeniowej (czasu) jest w stanie stworzyć dowolnie duże drzewo, gdzie po każdej iteracji jest gotowy zwrócić najlepszy dotychczasowy ruch. Działanie tego algorytmu opiera się na czterech etapach: selekcji, ekspansji, symulacji oraz wstecznej propagacji.
 
 \begin{figure}[!ht]
 \centering
 \includegraphics[width=0.8\textwidth]{images/mcts_sections.png}
-\caption{Etapy algorytmu Monte Carlo Tree Search\protect\footnotemark}
+\caption{Etapy algorytmu Monte Carlo Tree Search. Źródło: GeeksforGeeks, Monte Carlo Tree Search (MCTS) in Machine Learning}
 \end{figure}
-\footnotetext{Źródło: GeeksforGeeks, \textit{Monte Carlo Tree Search (MCTS) in Machine Learning}}
 
 \newpage
 
 \subsection{Selekcja}
-Etap selekcji, jak sama nazwa wskazuje wybiera najbardziej obiecujący liść do dalszego rozwoju drzewa. Liść jest rozumiany jako węzeł, który nie został jeszcze całkowicie rozwinięty, czyli nie posiada jeszcze wszystkich swoich dzieci.
-Jest on wybierany na podstawie maksymalizacji funkcji UCT:
+Podczas etapu selekcji algorytm wybiera najlepszą ścieżkę od korzenia drzewa do liścia poprzez wybór odpowiednich węzłów. Są one wybierane na podstawie funkcji UCT:
 
 \begin{equation}
 \operatorname{UCT}(s,a) \,=\, \widehat{Q}(s,a) \, + \, c\, \sqrt{\frac{\ln(N(s))}{N(s,a)}},\,
@@ -35,13 +33,13 @@ Jest on wybierany na podstawie maksymalizacji funkcji UCT:
 
 \hspace{1cm}
 
-Wzór ten składa się z sumy dwóch części. Pierwsza z nich $\widehat{Q}(s,a)$ odpowiada za eksploatację, czyli wybór węzła, który jak dotąd osiągnął najlepszy wynik. Druga część $c\, \sqrt{\frac{\ln(n_s)}{n_{s,a}}}$ skupia się na eksploracji, czyli wyborze węzła, który był rzadziej odwiedzany. Na rysunku 2.2 możemy zauważyć, że znacznie bardziej faworyzuje on mniejszą liczbę odwiedzin $n_{s,a}$, ponadto użycie logarytmu naturalnego sprawia, że zmiana liczby odwiedzin węzła rodzica nie powoduje nagłych zmian w wartości eksploracji. Współczynnik $c$ pozwala nam dostosować balans między eksploracją, a eksploatacją.
+Wzór ten składa się z sumy dwóch składników. Pierwszy z nich $\widehat{Q}(s,a)$ odpowiada za eksploatację, czyli wybór węzła, który jak dotąd osiągnął najlepszy wynik. Natomiast drugi $c\, \sqrt{\frac{\ln(n_s)}{n_{s,a}}}$ skupia się na eksploracji. Na rysunku 2.2 można zauważyć, że współczynnik ten znacznie bardziej faworyzuje mniejszą liczbę odwiedzin $n_{s,a}$. Ponadto użycie logarytmu naturalnego sprawia, że zmiana liczby odwiedzin węzła rodzica nie powoduje nagłych zmian. Współczynnik $c$ pozwala dostosować balans między eksploracją, a eksploatacją. W opisywanym algorytmie jest ustawiona standardowa wartość $c = \sqrt{2}$ = 1,41.
 
 \begin{figure}[!t]
 \centering
 \begin{tikzpicture}
 \begin{axis} [
-    xlabel={Liczba odwiedzin węzła $n_{s,a}$},
+    xlabel={Liczba odwiedzin węzła $n(s,a)$},
     ylabel={Wartość eksploracji},
     grid=major,
     width=10cm,
@@ -50,33 +48,32 @@ Wzór ten składa się z sumy dwóch części. Pierwsza z nich $\widehat{Q}(s,a)
     samples=200
 ]
 \addplot[blue, thick] {sqrt(ln(50)/x)};
-\legend{$\sqrt{\frac{\ln 50}{n_{s,a}}}$}
+\legend{$\sqrt{\frac{\ln 50}{n(s,a)}}$}
 \end{axis}
 \end{tikzpicture}
-\caption{Składnik eksploracji $\sqrt{\frac{\ln(n_s)}{n_{s,a}}}$ dla $n_s=50$}
+\caption{Składnik eksploracji $\sqrt{\frac{\ln(N(s))}{N(s,a)}}$ dla $N(s)=50$}
 \label{fig:uct-exploration}
 \end{figure}
 
 \newpage
 
 \subsection{Ekspansja}
-Etap ekspansji ma za zadanie rozwijać drzewo poprzez dodanie jednego nowego węzła do wybranego liścia. Nowy węzeł jest wybierany losowo spośród wszystkich możliwych ruchów, które nie zostały jeszcze dodane do drzewa.
+Etap ekspansji ma za zadanie rozbudowywać drzewo o kolejne węzły. Są one wybierane w sposób losowy spośród wszystkich możliwych akcji w danym stanie.
 
 \subsection{Symulacja}
 Etap symulacji polega na przeprowadzeniu symulacji rozgrywki od nowo dodanego węzła do końca gry w sposób losowy. W przypadku szachów oznacza to wykonywanie losowych ruchów aż do osiągnięcia stanu końcowego: mat, pat, remis.
 
 \subsection{Wsteczna propagacja}
-Etap wstecznej propagacji polega na propagowaniu wyniku symulacji w górę drzewa. Aktualizowane są wszystkie węzły od nowo dodanego do korzenia. W każdym z tych węzłów zwiększana jest liczba odwiedzin, oraz sam wynik gry.
+Ostatnim krokiem w algorytmie jest wsteczna propagacja. Ma ona na celu zaktualizowanie statystyk węzłów znajdujących się na wybranej ścieżce. W każdym z nich jest modyfikowana liczba odwiedzin oraz wartość zwrócona z symulacji.
 
-% https://www.youtube.com/watch?v=OPgRNY3FaxA
 \section{Połączenie MCTS z siecią neuronową}
-Algorytm Monte Carlo Tree Search w podstawowej wersji korzysta z naiwnej metody oceniającej obecny stan gry, poprzez symulację losowych ruchów aż do zakończenia gry. W grach takich jak kółko i krzyżyk gdzie przestrzeń stanów jest bardzo ograniczona, jest to wystarczające rozwiązanie i przy odpowiedniej liczbie iteracji skuteczne. Natomiast w bardziej złożonych, jak przedstawiane szachy, taki sposób oceny staje się niewystarczający. Rozwiązaniem jest połączenie MCTS z siecią neuronową, która będzie w stanie ocenić obecny stan gry oraz przedstawić rozkład prawdopodobieństwa wszystkich następnych ruchów. Takie podejście wymaga stworzenia dwóch oddzielnych sieci, lub jednej z dwoma rozgałęzieniami. Pierwsza z nich będzie odpowiedzialna za ocenę obecnego stanu gry (value network), a druga za wybór najlepszego ruchu (policy network).
+Algorytm Monte Carlo Tree Search w podstawowej wersji korzysta z naiwnej metody oceniającej obecny stan gry. W grach takich jak kółko i krzyżyk gdzie przestrzeń stanów jest bardzo ograniczona, jest to wystarczające rozwiązanie i przy odpowiedniej liczbie iteracji skuteczne. Natomiast w bardziej złożonych, jak przedstawiane szachy, taki sposób oceny staje się niewystarczający. Rozwiązaniem jest połączenie MCTS z siecią neuronową, która będzie w stanie ocenić obecny stan gry oraz przedstawić rozkład prawdopodobieństwa wszystkich następnych ruchów. Takie podejście wymaga stworzenia dwóch oddzielnych sieci, lub jednej z dwoma grupami wyjść, gdzie jedna z nich będzie siecią policy, a druga value.
 
-W celu integracji MCTS z siecią neuronową, funkcja UCT została zastąpiona PUCT (Predictor + UCT). Takie samo podejście zostało zastosowane w AlphaZero \cite{AlphaZero}. Różnica między UCT a PUCT występuje w obliczaniu eksploracji, gdzie między innymi jest uwzględniane prawdopodobieństwo ruchu $P(s,a)$ zwracane przez policy network. Dodatkowo informacja zwracana przez value network jest wstecznie propagowana w drzewie, zastępując prostą nagrodę z symulacji.
+W celu integracji MCTS z siecią neuronową, funkcja UCT została zastąpiona PUCT (Predictor + UCT). Takie samo podejście zostało zastosowane w AlphaZero \cite{AlphaZero}. Różnica między UCT a PUCT występuje w obliczaniu eksploracji, gdzie między innymi jest uwzględniane prawdopodobieństwo ruchu $P(s,a)$ zwracane przez sieć policy. Dodatkowo informacja z sieci value jest wstecznie propagowana w drzewie, zastępując prostą nagrodę z symulacji.
 \hspace{2cm}
 
 \begin{equation}
-\operatorname{PUCT}(s,a) \,=\, \widehat{Q}(s,a) \, + \, c_{\mathrm{puct}}\, P(s,a)\, \frac{\sqrt{\sum_{b} N(s,b)}}{1 + N(s,a)}\, ,
+\operatorname{PUCT}(s,a) \,=\, \widehat{Q}(s,a) \, + \, c_{\mathrm{puct}}\, P(s,a)\, \frac{\sqrt{N(s)}}{1 + N(s,a)}\, ,
 \quad
 \widehat{Q}(s,a) \,=\, \dfrac{W(s,a)}{N(s,a)}\,
 \end{equation}
@@ -86,7 +83,6 @@ W celu integracji MCTS z siecią neuronową, funkcja UCT została zastąpiona PU
   \item[$\widehat{Q}$] - średnia wartość akcji $a$ w stanie $s$
   \item[$N(s)$] - liczba odwiedzin stanu $s$
   \item[$N(s,a)$] - liczba odwiedzeń akcji $a$ w stanie $s$
-  \item[$\sum_{b} N(s,b)$] - suma odwiedzin wszystkich akcji w stanie $s$
   \item[$P(s,a)$] - prawdopodobieństwo wyboru akcji $a$ w stanie $s$ zwracane przez sieć neuronową
   \item[$c_{puct}$] - współczynnik eksploracji
   \item[$W(s,a)$] - wartość sumy nagród akcji $a$ w stanie $s$
@@ -94,8 +90,9 @@ W celu integracji MCTS z siecią neuronową, funkcja UCT została zastąpiona PU
 
 \hspace{2cm}
 
-Na końcu składnik eksploatacji jest dodatkowo normalizowany i odwracany. Odwrócenie jest konieczne ze względu na fakt, że wartość jest zawsze liczona dla przeciwnika niezależnie od tego czy obecenie jest tura białych czy czarnych. Z tego powodu zależy nam na minimalizacji tej wartości, tak aby osłabiać przeciwnika. Normalizacja do przedziału [0,1] jest konieczna ze względu na fakt, że wartość $Q$ w przypadku przeważającej liczby przegranych partii może przyjmować wartości ujemne.
+Dodatkowo ze względu na fakt, że szachy są grą dla dwóch graczy o przeciwnych celach, podczas wstecznej propagacji wartość zwrócona przez sieć value jest każdorazowo odwracana przy przejściu przez węzeł. Podobnie jest podczas obliczania funckji PUCT, gdzie składnik eksloatacji jest odwracany, gdyż z perspektywy węzła rodzica wartość ta musi być minimalizowana, a nie maksymalizowana. Oprócz odwracania, składnik jest normalizowany do przedziału [0,1].
 
+Operacja odwracania oraz normalizowania składnika eksploatacji jest wykonywana według wzoru:
 \begin{equation}
 \widehat{Q}(s,a) \,=\,
 \begin{cases}
@@ -105,18 +102,28 @@ Na końcu składnik eksploatacji jest dodatkowo normalizowany i odwracany. Odwr�
 \end{equation}
 
 \section{WDL}
-W opisywanym wcześniej algorytmie PUCT zastosowanym w AlphaZero, wartość z value network po przepuszczeniu przez funkcję aktywacji tangensa hiperbolicznego, określa oczekiwaną wartość nagrody w przedziale [-1, 1]. Jednakże istnieje lepszy sposób na oszacowanie wartości pozycji, który jest wykorzystywany w nowoczesnych silnikach takich jak LeelaChessZero \cite{lc0_wdl}. Zamiast przewidywać ogólną wartość stanu, sieć może przewidywać rozkład prawdopodobieństwa trzech możliwych wyników rozgrywki: wygrana, remis, przegrana. Taki sposób daje szerszy pogląd na obecną sytuację, dzięki czemu pozbywamy się problemu związanego z niejednoznacznością 0, które może one oznaczać zarówno remis jak i niejasną pozycję, gdzie żadna ze stron nie ma wyraźnej przewagi.
+W algorytmie MCTS używanym w AlphaZero, wartość z value network po przepuszczeniu przez funkcję aktywacji tangensa hiperbolicznego, określa bezpośrednio wartość stanu gry. Jednakże istnieje lepszy sposób na oszacowanie wartości pozycji, który jest wykorzystywany w nowoczesnych silnikach takich jak LeelaChessZero \cite{lc0_wdl}. Zamiast przewidywać bezpośrednio wartość stanu, sieć może zwracać rozkład prawdopodobieństwa wszystkich możliwych wyników rozgrywki: wygrana, remis, przegrana. Taki sposób daje szerszy pogląd na sytuację, gdzie między innymi pozbywamy się problemu związanego z niejednoznacznością zera, które może oznaczać zarówno remis jak i niejasną pozycję, gdzie żadna ze stron nie ma wyraźnej przewagi.
 
 W celu zintegrowania takiego podejścia z MCTS, konieczne jest przekształcenie trzech wartości zwracanych przez sieć na jedną wartość liczbową. W tym celu jest wykonywany iloczyn skalarny wektora prawdopodobieństw:
 \begin{equation}
 V(s) = P_{win} \cdot 1 + P_{draw} \cdot 0 + P_{loss} \cdot (-1) = P_{win} - P_{loss}
 \end{equation}
 
-Na końcu jak w przypadku standardowego podejścia, wartość jest normalizowana i odwracana.
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8\textwidth]{images/WDL.png}
+\caption{Wykres rozkładu WDL podczas trwania partii szachowej. Źródło: Leela Chess Zero, Win-Draw-Loss evaluation}
+\end{figure}
+
+\newpage
 
 \section{First play urgency}
-W podstawowej wersji MCTS, podczas etapu selekcji priorytet wyboru mają nieodwiedzone węzły, które są wybierane losowo.  First play urgency (FPU) zmienia strategię wyboru takich węzłów, poprzez zastąpienie wartości eksploatacji wartością domyślną.
+W podstawowej wersji MCTS podczas etapu selekcji priorytet wyboru mają nieodwiedzone węzły, które są wybierane losowo. First play urgency (FPU) zmienia tę strategię poprzez zastąpienie wartości eksploatacji wartością domyślną.
 
-Strategii FPU jest kilka. Ogólna zasada jest taka, że im większa jest wartość, tym bardziej faworyzowane są nieodwiedzone węzły, gdyż może ona przykrywać wartości eksploatacji odwiedzonych już węzłów. W przedstawianym algorytmie została użyta strategia "qFPU". Jest ona wartością oczekiwaną rodzica. W ten sposób nieodwiedzone węzły są faworyzowane, ale nie na tyle aby całkowicie przykryć już odwiedzone. W porównaniu do strategii ze stałą wartością, jest ona znacznie bardziej adaptacyjna i dynamicznie dostosowuje się do sytuacji \cite{Cazenave2021}.
+Istnieje kilka wariantów strategii FPU. Ogólna zasada zakłada, że wraz ze wzrostem tej wartości nieodwiedzone węzły są bardziej faworyzowane, gdyż może ona przykrywać wartość eksploatacji węzłów już odwiedzonych.
 
-Dla przykładu w sytuacji gdy obecna pozycja jest niekorzystna, w skutek czego FPU przyjmie niską wartość, algorytm nabierze charakteru mocno eksploatacyjnego. Będzie on unikał nieznanych gałęzi do momentu znalezienia ruchu poprawiającego pozycję. Jeżeli taki ruch zostanie znaleziony, algorytm zacznie go wyraźnie faworyzować. Dzięki temu podejściu, algorytm aktywnie szuka ucieczki z trudnej sytuacji, zamiast tracić czas na eksplorację potencjalnie jeszcze gorszych ruchów, jak miałoby to miejsce w przypadku stałej, wysokiej wartości FPU. Natomiast jeżeli FPU będzie miało wysoką wartość dodatnią, algorytm skupi się na eksploracji, aby zwiększyć szansę na znalezienie ruchu jeszcze lepszego niż ten już zidentyfikowany.
+W przedstawianym algorytmie została użyta strategia "qFPU", w której wartość domyślna jest zastępowana wartością oczekiwaną węzła rodzica. W ten sposób nieodwiedzone węzły są faworyzowane, ale nie na tyle, aby całkowicie przykryć węzły już odwiedzone. W porównaniu do strategii ze stałą wartością jest ona znacznie bardziej adaptacyjna i dynamicznie dostosowuje się do sytuacji \cite{Cazenave2021}. 
+
+Dla przykładu, w sytuacji gdy obecna pozycja jest niekorzystna (w skutek czego FPU przyjmie niską wartość), algorytm nabierze charakteru mocno eksploatacyjnego. Będzie on unikał ryzykownych gałęzi do momentu znalezienia ruchu poprawiającego pozycję. Jeżeli taki ruch zostanie znaleziony, algorytm zacznie go wyraźnie faworyzować. Dzięki takiemu podejściu aktywnie szuka ucieczki z trudnej sytuacji, zamiast tracić czas na eksplorację potencjalnie jeszcze gorszych ruchów, jak miałoby to miejsce w przypadku stałej, wysokiej wartości FPU. 
+
+Natomiast jeżeli FPU będzie miało wysoką dodatnią wartość, algorytm skupi się na eksploracji, aby zwiększyć szansę na znalezienie ruchu potencjalnie jeszcze lepszego niż dotychczas znaleziony.
