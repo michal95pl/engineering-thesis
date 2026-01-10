@@ -177,7 +177,7 @@ Do tej pory opisywane metody skupiały się na większym wykorzystaniu GPU. Jedn
 Do zrównoleglenia algorytmu zostały użyte wszystkie omówione wcześniej techniki, takie jak batchowanie danych z buforem o rozmiarze 2 oraz WU-UCT. Działanie samej równoległości opiera się na metodzie tree parallelization, gdzie jedno drzewo jest współdzielone między wszystkimi workerami. 
 
 \subsection{Struktura drzewa}
-Język Python jest językiem jednowątkowym przez co koniecznym było użycie wieloprocesowości. Głównym problemem w takim podejściu jest brak współdzielonej pamięci programu między procesami. Z tego powodu konieczne było wydzielenie fragmentu pamięci dynamicznej do przechowywania współdzielonej struktury drzewa. Z poziomu Pythona ma ona postać zwykłych bajtów, przez co możliwe są tylko dwa rozwiązania przechowywania obiektowej struktury: spłaszczenie, lub użycie serializacji wraz z deserializacją. Z oczywistych względów wydajnościowych jak i prostoty implementacji została wybrana pierwsza metoda.
+Język Python jest językiem jednowątkowym, przez co koniecznym było użycie wieloprocesowości. Głównym problemem w takim podejściu jest brak współdzielonej pamięci programu między procesami. Z tego powodu konieczne było wydzielenie fragmentu pamięci dynamicznej do przechowywania współdzielonej struktury drzewa. Z poziomu Pythona ma ona postać zwykłych bajtów, przez co możliwe są tylko dwa rozwiązania przechowywania obiektowej struktury: spłaszczenie, lub użycie serializacji wraz z deserializacją. Z oczywistych względów wydajnościowych jak i prostoty implementacji została wybrana pierwsza metoda.
 
 Ze względu na fakt, że używając współdzielonaj pamięci jest tylko dostęp do bloku bajtów, spłaszczona struktura musi być przechowywana w tablicy. Ogólne działanie drzewa jest oparte na podobnej zasadzie co wersja obiektowa. Z taką różnicą, że zamiast operować na referencjach, operujemy na indeksach tablicy. Każdy węzeł zawiera informacje o id rodzicu oraz dzieci. Statystyki drzewa są przechowywane identycznie jak w wersji obiektowej. Różnica pojawia się tylko przy stanie gry, czyli planszy. Zamiast serializować i deserializować obiekt BoardPlus, plansza jest przechowywana w znacznie bardziej kompaktowej formie, jako tablica charów oraz zmiennej bool. Opisują one kolejno stan planszy w formacie FEN oraz perspektywę rozgrywki. Format FEN był opisywany w pierwszym rozdziale.
 
@@ -234,9 +234,9 @@ Powyższa struktura uwzględnia również zmienną result przechowującą wynik 
 \newpage
 
 \subsection{Działanie wieloprocesowego MCTS}
-Ostatnim wyzwaniem było zaprojektowanie procesów wykonawczych wraz z ich synchronizacją, gdzie każdy z nich ma za zadnie wykonanie takiej samej liczby symulacji. Trzeba wziąć pod uwagę fakt, że wszystkie operacje będą odbywały się na jednym drzewie. Szczególnie jest to problematyczne w początkowej fazie, gdzie przez dostępność małego zbioru liści, może dojść do sytuacji gdzie wiele procesów będzie podążało tą samą ścieżką osiągając ten sam liść.
+Ostatnim wyzwaniem było zaprojektowanie procesów wykonawczych wraz z ich synchronizacją, gdzie każdy z nich ma za zadnie wykonanie takiej samej liczby symulacji. Trzeba wziąć pod uwagę fakt, że wszystkie operacje będą odbywały się na jednym drzewie. Szczególnie jest to problematyczne w początkowej fazie, gdzie przez dostępność małego zbioru liści może dojść do sytuacji, gdzie wiele procesów będzie podążało tą samą ścieżką osiągając ten sam liść.
 
-Bardzo dobrze ilustruje to przypadek widoczny na rysunku 4.6, gdzie algorytm po inicjalizacji zaczyna wykonywać pierwszą selekcję zaczynając od korzenia. Naturalnie jest tylko jeden korzeń w drzwie, więc trzeba wówczas zapewnić że tylko jeden proces będzie mógł go rozwinąć, a pozostałe będą musiały czekać. Obsługa takiego przypadku jest zaprezentowana na rysunku 4.7, gdzie algorytm od razu sprawdza czy są dostępne liście. Jeżeli nie, to czeka, albo przetwarza swój bufor niezależnie od rozmiaru. Wywołanie przetwarzania bufora w takim przypadku ma na celu uniknięcie sytuacji, gdzie procesy same się blokują czekając na odblokowanie liści w buforach.
+Bardzo dobrze ilustruje to przypadek widoczny na rysunku 4.6, gdzie algorytm po inicjalizacji zaczyna wykonywać pierwszą selekcję zaczynając od korzenia. Naturalnie jest tylko jeden korzeń w drzewie, więc trzeba wówczas zapewnić, że tylko jeden proces będzie mógł go rozwinąć, a pozostałe będą musiały czekać. Obsługa takiego przypadku jest zaprezentowana na rysunku 4.7, gdzie algorytm od razu sprawdza czy są dostępne liście. Jeżeli nie, to czeka, albo przetwarza swój bufor niezależnie od rozmiaru. Wywołanie przetwarzania bufora w takim przypadku ma na celu uniknięcie sytuacji, gdzie procesy same się blokują czekając na odblokowanie liści w buforach.
 
 \begin{figure}[h]
 \centering
@@ -269,8 +269,57 @@ W pliku konfiguracyjnym użytkownik za pomocą wartości \textit{stockfish\_gen\
 
 Na wykresach porównawczych jest również uwzględniony wynik losowego modelu, który w każdej turze wybiera losowy (legalny) ruch. Pełni on rolę poziomu odniesienia.
 
+\newpage
+
+Na rysunku 4.9 jest przedstawiony wykres wpływu ilości procesów na czas wykonania 6000 iteracji MCTS z buforem o rozmiarze 2. Testy zostały przeprowadzone na procesorze i7-11800H oraz GPU RTX 3060. Podobnie jak z rozmiarem bufora, wraz ze wzrostem ilości procesów różnica czasu wykonania maleje. W tym przypadku jest to spowodowane synchronizacją, gdzie wąskim gardłem jest brązowy blok przedstawiony na rysunku 4.7.
+
+\begin{figure}[!h]
+\centering
+\begin{tikzpicture}
+  \begin{axis}[
+      width=10cm,
+      height=6cm,
+      grid=both,
+      xlabel={Ilość procesów},
+      ylabel={Czas [s]},
+      xtick={1,2,3,4,5,6,7,8},
+      ymin=20,
+      ymax=150,
+      ymajorgrids=true,
+      xmajorgrids=true,
+      legend style={at={(0.02,0.98)},anchor=north west,font=\small},
+      mark size=2.5pt
+  ]
+    \addplot+[blue, thick, mark=o] coordinates {
+      (1,145.69)
+      (2,77.25)
+      (3,55.82)
+      (4,44.39)
+      (5,38.66)
+      (6,35.1)
+      (7,33.46)
+      (8,31.75)
+    };
+  \end{axis}
+\end{tikzpicture}
+\caption{Wpływ ilości procesów na czas wykonania 6000 iteracji}
+\end{figure}
+
+Na rysunku 4.10 jest przedstawiony wykres porównawczy siedmiu gier rozegranych między opisywanym modelem z 9000 symulacjami, a Stockfishem. Większość partii dotrwała do ok 60 ruchów. Wszystkie partie zakończyły się przegraną, co jest zrozumiałe biorąc pod uwagę siłę Stockfisha.
+
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.6\textwidth]{images/stockfish.png}
-\caption{Wykres przeżywalności modelu względem Stockfish}
+\includegraphics[width=0.6\textwidth]{images/mcts_4500.png}
+\caption{Wykres przeżywalności MCTS względem Stockfish}
 \end{figure}
+
+\newpage
+
+Rysunek 4.11 przedstawia wykres porównawczy siedmiu gier rozegranych między samą siecią neuronową, a Stockfishem. W tym przypadku sieć neuronowa nie korzysta z MCTS, a jedynie wybiera ruch na podstawie najwyższego prawdopodobieństwa zwracanego przez sieć. W porównaniu do poprzedniego wykresu, widać pogorszenie się wyników.
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.6\textwidth]{images/stockfish_net.png}
+\caption{Wykres przeżywalności sieci neuronowej względem Stockfish}
+\end{figure}
+
+
