@@ -39,14 +39,14 @@ W artykule "On effective parallelization of Monte Carlo Tree Search" \cite{Effec
   \item[$\overline{N}(s,a)$] - zmodyfikowana liczba odwiedzin akcji $a$ w stanie $s$
   \item[$N(s,a)$] - liczba odwiedzin akcji $a$ w stanie $s$
   \item[$O(s,a)$] - liczba liści w których trwają obliczenia dla akcji $a$ w stanie $s$
-  \item[$G(s,a)$] - (ang. Gap) błąd estymacji wartości akcji $a$ w stanie $s$
+  \item[$G(s,a)$] - błąd estymacji wartości akcji $a$ w stanie $s$
   \item[$\overline{Q}(s,a)$] - zmodyfikowana wartość akcji $a$ w stanie $s$ w algorytmie równoległym
   \item[$Q_{m}^{\mathbb{A}_{\text{seq}}}(s,a)$] - wartość akcji $a$ w stanie $s$ w algorytmie sekwencyjnym po $m$ odwiedzinach
 \end{description}
 
 \vspace{0.5cm}
 
-Powyższe warunki konieczne pokazują, że idealny algorytm równoległy musi w trakcie oczekiwania na wynik obliczeń, modyfikować tymczasowo statystyki węzłów. Powinny one być idealnie oszacowane, tak aby drzewo w każdej chwili czasowej dysponowało aktualnymi informacjami o swoim stanie. W przeciwnym razie, algorytm opierający swoje działanie na nieaktualnych wartościach dokonywałby nieoptymalnych wyborów węzłów, co można było zaobserwować na rysunku 4.1.
+Powyższe warunki konieczne pokazują, że idealny algorytm równoległy musi w trakcie oczekiwania na wynik obliczeń modyfikować tymczasowo statystyki węzłów. Powinny one być idealnie oszacowane, tak aby drzewo w każdej chwili czasowej dysponowało aktualnymi informacjami o swoim stanie. W przeciwnym razie, algorytm opierający swoje działanie na nieaktualnych wartościach dokonywałby nieoptymalnych wyborów węzłów, co można było zaobserwować na rysunku 4.1.
 
 W praktyce spełnienie pierwszego warunku jest stosunkowo proste i zostało to rozwiązane przez implementacje WU-UCT, natomiast drugi warunek jest bardzo trudny do zrealizowania, gdyż wymaga przewidzenia wartości akcji.
 
@@ -161,7 +161,7 @@ W efekcie powyższych problemów, zwiększanie rozmiaru bufora nie tylko nie prz
 
 Testy wydajnościowe przedstawione na wykresie zostały przeprowadzone na procesorze i7-11800H oraz GPU RTX 3060. Na wykresie 4.3 można zaobserwować, że wraz ze wzrostem wielkości bufora, różnica czasu wykonania maleje. 
 
-Jako optymalną wartość rozmiaru bufora wybrano 2, gdyż daje ona bardzo duży zysk czasowy, a jednocześnie brak spełenia drugiego warunku koniecznego nie ma dużego wypływu na jakość podejmowanych decyzji. Na wykresie 4.4 można zauważyć, że używając tego samogo czasu na oblieczenie ruchu, algorytm z buforem o rozmiarze 2 osiąga przewagę nad sekwencyjną wersją.
+Jako optymalną wartość rozmiaru bufora wybrano 2, gdyż daje ona bardzo duży zysk czasowy, a jednocześnie brak spełenia drugiego warunku koniecznego nie ma dużego wypływu na jakość podejmowanych decyzji. Na wykresie 4.4 można zauważyć, że używając tego samego czasu na obliczenie ruchu, algorytm z buforem o rozmiarze 2 osiąga przewagę nad sekwencyjną wersją.
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.55\textwidth]{images/buffor-comp.png}
@@ -223,7 +223,7 @@ tree_dtype = np.dtype([
 
 Powyższa struktura uwzględnia również zmienną result przechowującą wynik gry dla zakończonych stanów. Wartość ta jest dodawana w momencie ekspancji. Pozwala to uniknąć niepotrzebnej kolejnej zamiany fen na obiekt klasy BoardPlus bezpośrednio po selekcji.
 
-\vspace{2cm}
+\vspace{2cm} 
 
 \begin{figure}[h]
 \centering
@@ -271,7 +271,32 @@ Na wykresach porównawczych jest również uwzględniony wynik losowego modelu, 
 
 \newpage
 
-Na rysunku 4.9 jest przedstawiony wykres wpływu ilości procesów na czas wykonania 6000 iteracji MCTS z buforem o rozmiarze 2. Testy zostały przeprowadzone na procesorze i7-11800H oraz GPU RTX 3060. Podobnie jak z rozmiarem bufora, wraz ze wzrostem ilości procesów różnica czasu wykonania maleje. W tym przypadku jest to spowodowane synchronizacją, gdzie wąskim gardłem jest brązowy blok przedstawiony na rysunku 4.7.
+Na rysunku 4.9 jest przedstawiony wykres porównawczy siedmiu gier rozegranych między opisywanym modelem z 9000 symulacjami, a Stockfishem. Większość partii dotrwała powyżej 60 ruchów. Wszystkie partie zakończyły się przegraną, co jest zrozumiałe biorąc pod uwagę siłę Stockfisha.
+Na rysunku 4.10 jest ten sam wykres, ale dla 4500 symulacji. Łatwo można zauważyć, że mniejsza ilość symulacji przekłada się na gorsze wyniki algorytmu.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.6\textwidth]{images/stockfish_9000.png}
+\caption{Wykres przeżywalności MCTS względem Stockfish dla 9000 symulacji}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.6\textwidth]{images/mcts_4500.png}
+\caption{Wykres przeżywalności MCTS względem Stockfish dla 4500 symulacji}
+\end{figure}
+
+
+\newpage
+
+Rysunek 4.11 przedstawia wykres porównawczy siedmiu gier rozegranych między samą siecią neuronową, a Stockfishem. W tym przypadku sieć neuronowa nie korzysta z MCTS, a jedynie wybiera ruch na podstawie najwyższego prawdopodobieństwa zwracanego przez sieć. W porównaniu do poprzednich wykresów, widać pogorszenie się wyników.
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.6\textwidth]{images/stockfish_net.png}
+\caption{Wykres przeżywalności sieci neuronowej względem Stockfish}
+\end{figure}
+
+Na rysunku 4.12 jest przedstawiony wykres wpływu ilości procesów na czas wykonania 6000 iteracji MCTS z buforem o rozmiarze 2. Testy zostały przeprowadzone na procesorze i7-11800H oraz GPU RTX 3060. Podobnie jak z rozmiarem bufora, wraz ze wzrostem ilości procesów różnica czasu wykonania maleje. W tym przypadku jest to spowodowane synchronizacją, gdzie wąskim gardłem jest brązowy blok przedstawiony na rysunku 4.7.
 
 \begin{figure}[!h]
 \centering
@@ -303,23 +328,6 @@ Na rysunku 4.9 jest przedstawiony wykres wpływu ilości procesów na czas wykon
   \end{axis}
 \end{tikzpicture}
 \caption{Wpływ ilości procesów na czas wykonania 6000 iteracji}
-\end{figure}
-
-Na rysunku 4.10 jest przedstawiony wykres porównawczy siedmiu gier rozegranych między opisywanym modelem z 9000 symulacjami, a Stockfishem. Większość partii dotrwała do ok 60 ruchów. Wszystkie partie zakończyły się przegraną, co jest zrozumiałe biorąc pod uwagę siłę Stockfisha.
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=0.6\textwidth]{images/mcts_4500.png}
-\caption{Wykres przeżywalności MCTS względem Stockfish}
-\end{figure}
-
-\newpage
-
-Rysunek 4.11 przedstawia wykres porównawczy siedmiu gier rozegranych między samą siecią neuronową, a Stockfishem. W tym przypadku sieć neuronowa nie korzysta z MCTS, a jedynie wybiera ruch na podstawie najwyższego prawdopodobieństwa zwracanego przez sieć. W porównaniu do poprzedniego wykresu, widać pogorszenie się wyników.
-\begin{figure}[h]
-\centering
-\includegraphics[width=0.6\textwidth]{images/stockfish_net.png}
-\caption{Wykres przeżywalności sieci neuronowej względem Stockfish}
 \end{figure}
 
 
