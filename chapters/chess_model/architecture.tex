@@ -3,12 +3,12 @@
 W tej części zostanie przybliżona architekrura aplikacji serwerowej na której opiera się cała omawiana praca.
 
 \section{Komunikacja GUI z silnikiem szachowym}
-Do komunikacji z silkiem szachowym została stworzona klasa \textit{Communication}. Działa ona w oparciu o \textit{sockety}, gdzie każdy klient jest obłusgiwany w osobnym wątku. Ze względu na ograniczenia wydajnościowe, niezależnie od ilości klientów działa tylko jedna instancja silnika szachowego. W momencie otrzymania zapytania od klientów, wiadomości są kolejkowane i obsługiwane w kolejności ich nadejścia.
+Do komunikacji z silnikiem szachowym została stworzona klasa \textit{Communication}. Działa ona w oparciu o \textit{sockety}, gdzie każdy klient jest obłusgiwany w osobnym wątku. Ze względu na ograniczenia wydajnościowe, niezależnie od ilości klientów działa tylko jedna instancja silnika szachowego. W momencie otrzymania zapytania od klientów, wiadomości są kolejkowane i obsługiwane w kolejności ich nadejścia.
 
-Wiadomości są w postaci \textit{JSON} i zawierają następujące 2 pola: \textit{command} oraz \textit{boards}. Pole \textit{command} zawiera komendę do wykonania. W obecnej wersji jest tylko jedna komenda \textit{get\_move}, która przekazuje do silnika szachowego aktualne stany plansz i oczekuje na odpowiedź z najlepszym ruchem. Do tej komendy dołączone jest pole \textit{boards}, które zawiera listę stanów planszy w formacie \textit{FEN}. Silnik podejmuje decyzję o ruchu na podstawie do 3 stanów planszy przesłanych w jednym zapytaniu.
+Wiadomości są w postaci \textit{JSON} i zawierają następujące 2 pola: \textit{command} oraz \textit{boards}. Pole \textit{command} zawiera komendę do wykonania. W obecnej wersji jest tylko jedna komenda \textit{get\_move}, która przekazuje do silnika szachowego aktualne stany plansz i zwraca odpowiedź z najlepszym ruchem. Pole \textit{boards} zawiera listę stanów planszy w formacie \textit{FEN}. Silnik podejmuje decyzję o ruchu na podstawie do 3 stanów.
 
 \section{Interfejs aplikacji serwerowej}
-Aplikacja serwerowa obługiwana jest poprzez prosty interfejs konsolowy, który pozwala na wywoływanie funkcji. Po wpisaniu komendy \textit{help} wyświetlana jest lista dostępnych komend wraz z ich którkim opisem. Dodatkowo są wyświetlone parametry jakie obsługują. Paramtery w kwadratowych nawiasach są opcjonalne. W celu lepszej automatyzacji serwera, w pliku konfiguracyjnym pod nazwą \textit{startCommands} można wpisać listę komend wraz z argumentami, które zostaną automatycznie wywołanie po starcie aplikacji.
+Aplikacja serwerowa obługiwana jest poprzez prosty interfejs konsolowy, pozwalający na wywoływanie funkcji. Po wpisaniu komendy \textit{help} wyświetlana jest lista dostępnych komend wraz z ich krótkim opisem. Dodatkowo wyświetlone są parametry jakie obsługują. Kwadratowe nawiasy oznaczają parametry opcjonalne. W celu lepszej automatyzacji serwera, w pliku konfiguracyjnym pod nazwą \textit{startCommands} można wpisać listę komend wraz z argumentami, które zostaną automatycznie wywołane po starcie aplikacji.
 
 \newpage
 
@@ -30,6 +30,8 @@ W tym przypadku w listenerze jest wysyłane zapytanie do aplikacji serwerowej z 
 \includegraphics[width=0.4\textwidth]{images/gui_ruch.png}
 \caption{intefejs graficzny}
 \end{figure}
+
+\newpage
 
 \lstset{style=codeListingStyle}
 \begin{lstlisting}[

@@ -1,14 +1,14 @@
 \setcounter{chapter}{2}
 
 \chapter{Architektura sieci neuronowej}
-Architektura sieci neuronowej wykorzystywana w opisywanym rozwiązaniu jest inspirowana modelem \textit{AlphaZero}. Aczkolwiek od jego publikacji mineło już kilka lat, gdzie w tym czasie powstało kilka nowych technik i ulepszeń, które zostaną przybliżone w niniejszym rozdziale.
+Architektura sieci neuronowej wykorzystywana w opisywanym rozwiązaniu jest inspirowana modelem \textit{AlphaZero}. Aczkolwiek od jego publikacji minęło już kilka lat, gdzie w tym czasie powstało kilka nowych technik i ulepszeń, które zostaną przybliżone w niniejszym rozdziale.
 
 \section{Architektura}
 Jak zostało wspomniane w poprzednim rozdziale, sieć neuronowa stanowi kręgosłup algorytmu MCTS. To właśnie ona odpowiada za wyznaczenie dwóch rozkładów prawdopodobieństwa na podstawie dostarczanych plansz. W związku z tym, podobnie jak ma to miejsce w \textit{AlphaZero}, sieć posiada jedno wejście oraz dwie grupy wyjść. 
 
-Wejściem są zakodowane trzy plansze szachowe tworzące spójną sekwencję czasową. Pozwala to sieci na lepsze zrozumienie gry, gdyż widzi ona płynny przebieg rozgrywki, a nie jedynie pojedyńczy stan. Dodatkowo zwiększa to różnorodność danych treningowych. W przypadku dostarczania tylko jednego stanu, istnieje znacznie większe prawdopodobieństwo powtarzania się tych samych danych, przez co sieć może mieć trudności z ougólnieniem cech.
+Wejściem są zakodowane trzy plansze szachowe tworzące spójną sekwencję czasową. Pozwala to sieci na lepsze zrozumienie gry, gdyż widzi ona płynny przebieg rozgrywki, a nie jedynie pojedynczy stan. Dodatkowo zwiększa to różnorodność danych treningowych. W przypadku dostarczania tylko jednego stanu, istnieje znacznie większe prawdopodobieństwo powtarzania się tych samych danych, przez co sieć może mieć trudności z ougólnieniem cech.
 
-Dzięki zastosowaniu dwóch grup wyjść jedna sieć jest mniej obciążająca obliczeniowo niż dwie osobne sieci. Ponadto sieć ze wspólnym trzonem jest zmuszona do generalizacji cech rozgrywki, co przyczynia się do lepszej regaluaryzacji modelu \cite{AlphaGoZero}. Dopiero po rozdzieleniu na dwie części sieć specjalizuje się w realizacji przypisanych zadań.
+Dzięki zastosowaniu dwóch grup wyjść jedna sieć jest mniej obciążająca obliczeniowo niż dwie osobne sieci. Ponadto sieć ze wspólnym trzonem jest zmuszona do generalizacji cech rozgrywki, co przyczynia się do lepszej regularyzacji modelu \cite{AlphaGoZero}. Dopiero po rozdzieleniu na dwie części sieć specjalizuje się w realizacji przypisanych zadań.
 
 Na rysunku 3.1 przedstawiony jest diagram architektury sieci neuronowej. Zawiera on warstwy rezydualne, SE oraz dwie głowice wyjściowe. W dalszej części tego rozdziału zostaną one szczegółowo omówione.
 
@@ -27,11 +27,11 @@ Na rysunku 3.1 przedstawiony jest diagram architektury sieci neuronowej. Zawiera
 
 Kluczowym elementem przedstawianej architektury są warstwy rezydualne. Rozwiązują one problem z degradacją gradientu. Zjawisko to objawia się nasyconą dokładnością danych treningowych, której nie udaje się poprawić. Nie jest to spowodowane przeuczeniem, lecz głębokością samej sieci. Przez co wbrew intuicji, płytszy model może osiągnąć lepsze wyniki.
 
-W celu rozwiązania tego problemu, powstała koncepcja warstw rezydualnych. Zmieniają one sposób przepływu informacji przez sieć. Zamiast uczyć się bezpośrednio funkcji $H(x)$, warstwa rezydualna uczy się różnicy $F(x) = H(x) - x$. Wyjściem z warstwy jest suma $F(x) + x$. W rezultacie sieć uczy się jedynie zmiany sygnału, a nie całej funkcji. Bardzo dużą zaletą tego podejścia jest stosunkowe proste stworzenie funkcji tożsamościowej poprzez wyzerowanie wag. W ten sposób autorzy w swojej pracy, pokazali że sieci rezydualne nie tworzą większego błędu niż płytsze modele \cite{ResNet}.
+W celu rozwiązania tego problemu, powstała koncepcja warstw rezydualnych. Zmieniają one sposób przepływu informacji przez sieć. Zamiast uczyć się bezpośrednio funkcji $H(x)$, warstwa rezydualna uczy się różnicy $F(x) = H(x) - x$. Wyjściem z warstwy jest suma $F(x) + x$. W rezultacie sieć uczy się jedynie zmiany sygnału, a nie całej funkcji. Bardzo dużą zaletą tego podejścia jest stosunkowo proste stworzenie funkcji tożsamościowej poprzez wyzerowanie wag. W ten sposób autorzy w swojej pracy, pokazali że sieci rezydualne nie tworzą większego błędu niż płytsze modele \cite{ResNet}.
 
 W opisywanym modelu można ustawić liczbę warstw rezydualnych w pliku konfiguracyjnym pod nazwą \textit{num\_residual\_blocks}.
 
-Na rysunku 3.2 przedstawiona jest standardowa architektura warstwy rezydualnej. Składa sie ona z 2 warstw konwolucyjnych wpieranych przez warstwy normalizacji batchowej oraz funkcje aktywacji.
+Na rysunku 3.2 przedstawiona jest standardowa architektura warstwy rezydualnej. Składa się ona z 2 warstw konwolucyjnych wpieranych przez warstwy normalizacji batchowej oraz funkcje aktywacji.
 
 \hspace{0.5cm}
 
@@ -121,11 +121,11 @@ Należy jednak zauważyć, że po znormalizowaniu wyjścia z warstwy, sieć moż
 \newpage
 
 \section{Squeeze and Excitation} 
-Kolejnym elementem widocznym na diagramie 4.1 są bloki \textit{Squeeze and Excitation}. Bardzo podobne rozwiązanie zostało zastosowane w LolaChessZero. {\cite{lc0_nn}} Ich zadaniem jest adaptacyjna rekalibracja kanałów cech na wyjściu z warstwy konwolucyjnej. Dzięki temu niwelują one ograniczenia splotu, który analizuje jedynie lokalne wzorce traktując zależności między kanałami w sposób niejawny \cite{SqueezeAndExcitation}. Ograniczenie to wynika przede wszystkim z użycia niewielkiego filtra, który operuje na małym fragmencie wejścia, a następnie sumuje wyniki ze wszystkich kanałów.
+Kolejnym elementem widocznym na diagramie 4.1 są bloki \textit{Squeeze and Excitation}. Bardzo podobne rozwiązanie zostało zastosowane w LeelaChessZero. {\cite{lc0_nn}} Ich zadaniem jest adaptacyjna rekalibracja kanałów cech na wyjściu z warstwy konwolucyjnej. Dzięki temu niwelują one ograniczenia splotu, który analizuje jedynie lokalne wzorce traktując zależności między kanałami w sposób niejawny \cite{SqueezeAndExcitation}. Ograniczenie to wynika przede wszystkim z użycia niewielkiego filtra, który operuje na małym fragmencie wejścia, a następnie sumuje wyniki ze wszystkich kanałów.
 
 W celu poprawienia reprezentacji cech, blok \textit{Squeeze and Excitation} składa się z dwóch etapów: \textit{Squeeze} oraz \textit{Excitation}. Pierwszy z nich ma na celu stworzenie deskryptora globalnych cech dla każdego kanału. Jest to osiągnięte poprzez zastosowanie globalnego uśredniania, które redukuje wymiary każdego z kanałów do pojedynczej wartości.
 
-Natomiast zadaniem \textit{Excitation} jest wychwycenie nieliniowych zależności między kanałami oraz wygenerowanie wag dla każdego z nich. Jest to realizowane za pomocą dwóch warstw gęstych rozdzielonych funkcją SiLu. Na wyjściu jest funkcja sigmoidalna która zwraca wartości w przedziale [0,1]. Dodatkowo, w celu ograniczenia liczby parametrów oraz poprawy generalizacji modelu, wprowadzono współczynnik redukcji \cite{SqueezeAndExcitation}. Zmniejsza on wyjście pierwszej warstwy, po czym druga warstwa przywraca pierwotną liczbę kanałów na wyjściu bloku. W prezentowanym modelu współczynnik ten jest ustawiony na 8, co przy liczbie 64 kanałów daje 8 neuronów w warstwie ukrytej.
+Natomiast zadaniem \textit{Excitation} jest wychwycenie nieliniowych zależności między kanałami oraz wygenerowanie wag dla każdego z nich. Jest to realizowane za pomocą dwóch warstw gęstych rozdzielonych funkcją SiLu. Na wyjściu jest funkcja sigmoidalna, która zwraca wartości w przedziale [0,1]. Dodatkowo, w celu ograniczenia liczby parametrów oraz poprawy generalizacji modelu, wprowadzono współczynnik redukcji \cite{SqueezeAndExcitation}. Zmniejsza on wyjście pierwszej warstwy, po czym druga warstwa przywraca pierwotną liczbę kanałów na wyjściu bloku. W prezentowanym modelu współczynnik ten jest ustawiony na 8, co przy liczbie 64 kanałów daje 8 neuronów w warstwie ukrytej.
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.2\textwidth]{images/squeezeArchi.png}
@@ -174,7 +174,7 @@ W tym punkcie pochodna funkcji przyjmuje wartość zerową. W rezultacie dla war
 
 \hspace{0.5cm}
 
-Bardzo znaczącą różnice między SiLu, a ReLu widać przedewszystkim na wykresie loss dla głowicy value. Na zbiorze testowym model z ReLu jest niestabilny. Można również zauważyć, że nie jest on w stanie osiągnąć lepszego wyniku niż 0.880, podczas gdy SiLu schodzi do ok 0.865.
+Bardzo znaczącą różnicę między SiLu, a ReLu widać przede wszystkim na wykresie loss dla głowicy value. Na zbiorze testowym model z ReLu jest niestabilny. Można również zauważyć, że nie jest on w stanie osiągnąć lepszego wyniku niż 0.880, podczas gdy SiLu schodzi do ok 0.865.
 
 \begin{figure}[h]
 \centering
@@ -201,7 +201,7 @@ W fazie końcowej, sieć rozdziela się na dwie specjalizacyjne głowice wyjści
 \end{figure}
 
 \section{Value head}
-Value head jest drugą głowicą wyjściową sieci neuronowej. Jej zadaniem jest stworzenie rozkładu prawdopodobieństwa wyniku partii. Jest zbudowana bardzo podobnie do policy head, z tą różnicą że zawiera jedną warstwę gęstą więcej. Jest to spowodowane tym, że przewidywanie wyniku partii jest bardzo złożonym zadaniem. Dodatkowo w porównaniu do policy warstwa gęsta posiada znacznie mniej parametrów, dzięki czemu mimo większej liczby warstw, nie wpływa to znacząco na złożoność obliczeniową modelu. Wyjście z tej głowicy jest o rozmiarze 3, co odpowiada opisywanym wcześniej mechanizmowi WDL.
+Value head jest drugą głowicą wyjściową sieci neuronowej. Jej zadaniem jest stworzenie rozkładu prawdopodobieństwa wyniku partii. Jest zbudowana bardzo podobnie do policy head z tą różnicą, że zawiera jedną warstwę gęstą więcej. Jest to spowodowane tym, że przewidywanie wyniku partii jest bardzo złożonym zadaniem. Dodatkowo w porównaniu do policy warstwa gęsta posiada znacznie mniej parametrów, dzięki czemu mimo większej liczby warstw, nie wpływa to znacząco na złożoność obliczeniową modelu. Wyjście z tej głowicy jest o rozmiarze 3, co odpowiada opisywanym wcześniej mechanizmowi WDL.
 
 \hspace{2cm}
 
@@ -233,7 +233,7 @@ Celem trenowania sieci neuronowej jest minimalizacja funkcji straty, która skł
 
 Proces uczenia dużych sieci neuronowych odbywa się zazwyczaj na wielu rozłącznych podzbiorach danych, zwanych batchami. Takie podejście pozwala na efektywne wykorzystanie pamięci, zwłaszcza przy dużych zbiorach danych. Jednakże, aby ten proces przebiegał efektywnie, konieczne jest zapewnienie odpowiedniej szybkości przygotowywania danych treningowych równolegle z procesem uczenia. W tym celu została stworzona specjalna klasa \textit{NetDataset}, która wykorzystując gotowy moduł \textit{DataLoader} z biblioteki PyTorch zarządza przygotowywaniem oraz dostarczaniem danych do sieci wykorzystując wieloprocesowość.
 
-W trakcie uczenia modelu działają równolegle cztery procesy odpowiedzialne za przygotowanie danych. Ich ilość można dostosować w pliku konfiguracyjnym pod wartością "number\_of\_dataset\_processes". Każdy z nich dysponuje buforem zawierającym określoną liczbę ruchów. Jego wielkość można dostosować pod kluczem "buffer\_size". Zadaniem każdego z procesów jest utrzymanie wypełnionego buforu, poprzez ciągłe ładowanie plików \textit{.rdg}. Dzięki takiemu podejściu, dane są odpowiednio zróżnicowane poprzez ich losowe mieszanie w buforze.
+W trakcie uczenia modelu działają równolegle cztery procesy odpowiedzialne za przygotowanie danych. Ich ilość można dostosować w pliku konfiguracyjnym pod wartością "number\_of\_dataset\_processes". Każdy z nich dysponuje buforem zawierającym określoną liczbę ruchów. Jego wielkość można dostosować pod kluczem "buffer\_size". Zadaniem każdego z procesów jest utrzymanie wypełnionego buforu poprzez ciągłe ładowanie plików \textit{.rdg}. Dzięki takiemu podejściu, dane są odpowiednio zróżnicowane poprzez ich losowe mieszanie w buforze.
 
 Przed ostatecznym zwróceniem danych do procesu uczenia, są one odpowiednio kodowane do formatu zrozumiałego dla sieci neuronowej. Plansza jest rozszerzana do 13 kanałów, gdzie każdy z nich reprezentuje unikalną figurę oraz puste pole. Na końcu są one spłaszczane do jednego wymiaru oraz konwertowane do tensora. Natomiast ruch oraz wygrana są konwertowane tylko do tensorów.
 
@@ -246,16 +246,24 @@ Należy też zauważyć, że procesy działają niezależnie oraz równolegle. W
 \end{figure}
 
 \section{Ewaluacja modelu}
-Końcowy model sieci neuronowej składa się z 14 bloków rezydualnych, gdzie każdy z nich posiada 64 filtry. Głowica police zawiera 4 filtry, natomiast głowica value 32. Rozmiar bufora danych jest ustawiony na 10,000. Model został wytrenowany na 26 epokach z użyciem współczynnika uczenia równego 0.001 oraz batch size równy 2048.
+Końcowy model sieci neuronowej został wytrenowany na 960tys gier, co daje równowartość około 80mln ruchów. Zbiór testowy składa się z 240tys gier. Sieć neuronowa zbudowana jest z 14 bloków rezydualnych, gdzie każdy z nich posiada 64 filtry. Głowica policy zawiera 4 filtry, natomiast głowica value 32. Rozmiar bufora danych jest ustawiony na 10,000. Model został wytrenowany na 26 epokach z użyciem współczynnika uczenia równego 0.001 oraz batch size równy 2048.
 
-Na wykresie loss można dostrzec, że model na danych testowych dla głowicy policy osiągnął wartość ok 1.4, co jest bardzo dobrym wynikiem. Krzywa loss dla danych testowych jest niżej niż dla danych treningowych, co jest spowodowane użyciem warstw dropout.
+Na rysunku 3.15 można dostrzec, że model na danych testowych dla głowicy policy osiągnął wartość ok 1.4, co jest bardzo dobrym wynikiem. Krzywa loss dla danych testowych jest niżej niż dla danych treningowych, co jest spowodowane użyciem warstw dropout.
 
-Głowica value osiągnęła przeciętny wynik, jednakże biorąc pod uwagę złożoność zadania jest on akceptowalny. Trzeba mieć na uwadze, że ocena planszy bazuje na końcowym wyniku partii, który w części przypadku jest nie możliwy do przewidzenia na podstawie samej pozycji, szczególnie w początkowej fazie rozgrywki.
+Głowica value osiągnęła przeciętny wynik, jednakże biorąc pod uwagę złożoność zadania jest on akceptowalny. Trzeba mieć na uwadze, że ocena planszy bazuje na końcowym wyniku partii, który w części przypadku jest niemożliwy do przewidzenia na podstawie samej pozycji, szczególnie w początkowej fazie rozgrywki.
+
+Rysunek 3.16 przedstawia wykres loss dla identycznego modelu, ale z 7 blokami rezydualnymi. Widać wyraźnie znaczne pogorszenie się wyników dla głowicy value.
 
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.9\textwidth]{images/nomal-model.png}
 \caption{Wykres loss dla końcowego modelu. Wykres przedstawia co drugą epokę.}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.9\textwidth]{images/7_res_block_net.png}
+\caption{Wykres loss dla modelu z 7 blokami rezydualnymi. Wykres przedstawia co drugą epokę.}
 \end{figure}
 
 Macierz pomyłek dla głowicy value podobnie jak wykres loss wskazuje na problem z dokładnością predykcji. Widać również problem z niezbalansowaniem klas, gdzie gier zakończonych remisem jest znacznie mniej niż wygranych, bądź przegranych. Pomimo niedostatecznej jakości głowicy value, model jest wspomagany przez drzewo MCTS, które w dużej mierze poprawia jakość predykcji.
