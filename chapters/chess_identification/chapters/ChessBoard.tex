@@ -1,0 +1,48 @@
+\section{Przetwarzanie i przygotowanie obrazu szachownicy}
+
+Proces przygotowania szachownicy do analizy składa się z kilku etapów przetwarzania wstępnego, mających na 
+celu wyeliminowanie zniekształceń perspektywicznych oraz precyzyjne wykadrowanie obszaru gry. Moduł \texttt{BoardTransformation} 
+realizuje to zadanie poprzez detekcję markerów kolorystycznych oraz wykorzystanie algorytmów wizji komputerowej biblioteki OpenCV.
+
+\subsection{Detekcja punktów referencyjnych}
+
+Algorytm rozpoczyna pracę od segmentacji kolorów w przestrzeni barw HSV. Wykorzystywane są cztery markery: 
+jeden czerwony oraz trzy zielone, umieszczone w narożnikach fizycznej planszy. 
+
+\begin{itemize}
+    \item \textbf{Maskowanie kolorów:} Dla każdego koloru tworzona jest maska binarna przy użyciu progowania adaptacyjnego 
+    z uwzględnieniem kalibracji użytkownika. Proces ten ilustrują pliki \texttt{chapters/chess\_identification/images/steps/step1\_green\_mask.png} 
+    oraz \texttt{chapters/chess\_identification/images/steps/step1\_red\_mask.png}, które wyodrębniają tylko obszary o zadanej barwie.
+    \item \textbf{Morfologia i centroidy:} Na maski nakładana jest operacja otwarcia (\texttt{MORPH\_OPEN}) z kernelem $5 \times 5$ w 
+    celu usunięcia szumów. Następnie, za pomocą momentów obrazu (\texttt{cv2.moments}), wyliczane są środki ciężkości wykrytych konturów. 
+    Punkty te są wizualizowane jako kolorowe okręgi na obrazie \texttt{chapters/chess\_identification/images/steps/step2\_detected\_centers.png}.
+\end{itemize}
+
+\subsection{Orientacja i transformacja perspektywiczna}
+
+Kluczowym elementem jest poprawna identyfikacja narożników na podstawie wzajemnych odległości punktów zielonych od punktu 
+czerwonego, który służy jako punkt odniesienia (\textit{top\_left}).
+
+\begin{itemize}
+    \item \textbf{Identyfikacja narożników:} Punkt zielony znajdujący się najdalej od czerwonego klasyfikowany jest jako prawy dolny róg. 
+    Poprawność tej logiki weryfikuje obraz \texttt{chapters/chess\_identification/images/steps/step3\_board\_with\_diagonals.png}, przedstawiający przekątne łączące 
+    zidentyfikowane narożniki.
+    \item \textbf{Rektyfikacja:} Po ustaleniu współrzędnych, obliczana jest macierz transformacji, która rzutuje zniekształcony 
+    czworokąt na kwadrat o wymiarach $800 \times 800$ pikseli. Efekt prostowania perspektywy widoczny jest na 
+    zdjęciu \texttt{chapters/chess\_identification/images/steps/step4\_perspective\_warped.png}.
+\end{itemize}
+
+
+\subsection{Precyzyjne kadrowanie i finalna normalizacja}
+
+Ostatnim etapem jest usunięcie zbędnych marginesów poza polem gry. Wykorzystywana jest do tego funkcja \texttt{findChessboardCornersSB}, 
+która wyszukuje wewnętrzne przecięcia linii szachownicy.
+
+\begin{enumerate}
+    \item \textbf{Subpixel Accuracy:} Pozycje narożników są uściślane z dokładnością podpikselową za pomocą 
+    algorytmu \texttt{cornerSubPix}.
+    \item \textbf{Kadrowanie:} Na podstawie współrzędnych wykrytych pól wyznaczany jest obszar cięcia z 
+    marginesem (\textit{padding}).
+    \item \textbf{Finalny wynik:} Rezultatem jest obraz \texttt{chapters/chess\_identification/images/steps/step5\_final\_cropped.png}, który przedstawia 
+    idealnie wykadrowaną i znormalizowaną szachownicę, gotową do detekcji bierek.
+\end{enumerate}
