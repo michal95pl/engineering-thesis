@@ -1,0 +1,33 @@
+\section{Komunikacja z serwerem obliczeniowym}
+
+W celu zapewnienia wysokiej wydajności analizy ruchów oraz odciążenia interfejsu użytkownika, 
+moduł komunikacji został zaimplementowany jako oddzielny wątek działający w tle, dziedziczący po klasie \texttt{Thread}. 
+System wykorzystuje protokół \texttt{TCP/IP} do nawiązywania stabilnego połączenia z serwerem.
+
+\subsection{Protokół przesyłania danych}
+
+Komunikacja opiera się na wymianie komunikatów w formacie \texttt{JSON}, co pozwala na łatwą serializację złożonych struktur danych, 
+takich jak stany szachownicy. Proces wymiany informacji przebiega w następujący sposób:
+
+\begin{enumerate}
+    \item \textbf{Inicjalizacja:} Klient łączy się z serwerem pod wskazany adres \texttt{host} i numer \texttt{portu}, 
+    tworząc strumień danych \texttt{SOCK\_STREAM}.
+    \item \textbf{Wysłanie stanu gry:} Do serwera wysyłana jest tablica zawierająca trzy ostatnie stany szachownicy 
+    zapisane w notacji \texttt{FEN} (Forsyth-Edwards Notation). Przesłanie sekwencji stanów pozwala serwerowi na 
+    lepszą weryfikację dynamiki zmian na szachownicy.
+    \item \textbf{Odbiór decyzji:} Serwer po przeanalizowaniu obrazów i stanów przesyła odpowiedź zawierającą informację o 
+    wykonanym ruchu.
+\end{enumerate}
+
+\subsection{Zarządzanie asynchroniczne}
+
+Zastosowanie kolejki zadań (\texttt{Queue}) pozwala na bezpieczne przesyłanie komunikatów między wątkiem komunikacyjnym a głównym 
+wątkiem aplikacji (\texttt{VideoFrameThread}). Dzięki temu interfejs graficzny pozostaje responsywny, podczas gdy dane są 
+odbierane w pętli \texttt{while True} i buforowane do momentu ich przetworzenia.
+
+\begin{itemize}
+    \item \textbf{Metoda \texttt{send}:} Koduje słownik z danymi (w tym tablicę stanów FEN) do formatu UTF-8 i przesyła go przez gniazdo.
+    \item \textbf{Metoda \texttt{run}:} Nieustannie nasłuchuje na przychodzące pakiety danych o rozmiarze do 4096 bajtów.
+    \item \textbf{Metoda \texttt{get\_message}:} Pozwala na pobranie zdekodowanego komunikatu o ruchu pionka z kolejki, o ile 
+    jest on dostępny.
+\end{itemize}
