@@ -254,6 +254,14 @@ Głowica value osiągnęła przeciętny wynik, jednakże biorąc pod uwagę zło
 
 Rysunek 3.16 przedstawia wykres loss dla identycznego modelu, ale z 7 blokami rezydualnymi. Widać wyraźnie znaczne pogorszenie się wyników dla głowicy value.
 
+Macierz pomyłek dla głowicy value podobnie jak wykres loss wskazuje na problem z dokładnością predykcji. Widać również problem z niezbalansowaniem klas, gdzie gier zakończonych remisem jest znacznie mniej niż wygranych, bądź przegranych. Pomimo niedostatecznej jakości głowicy value, model jest wspomagany przez drzewo MCTS, które w dużej mierze poprawia jakość predykcji.
+
+
+
+Wykres dokładności top-10 dla głowicy policy, pokazuje że głowica policy bardzo dobrze sobie radzi z przewidywaniem ruchów. W 81 procentach przypadków prawidłowy ruch znajduje się wśród 3 najwyższych przewidywań sieci. Miara ta oddaje znacznie lepiej jakość modelu, niż zwykła dokładność oparta o najwyższy wynik, gdyż w szachach nie istnieje tylko jeden prawidłowy ruch. Często istnieje kilka dobrych posunięć, które następnie są analizowane przez drzewo MCTS.
+
+\newpage
+
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.9\textwidth]{images/nomal-model.png}
@@ -266,7 +274,7 @@ Rysunek 3.16 przedstawia wykres loss dla identycznego modelu, ale z 7 blokami re
 \caption{Wykres loss dla modelu z 7 blokami rezydualnymi. Wykres przedstawia co drugą epokę.}
 \end{figure}
 
-Macierz pomyłek dla głowicy value podobnie jak wykres loss wskazuje na problem z dokładnością predykcji. Widać również problem z niezbalansowaniem klas, gdzie gier zakończonych remisem jest znacznie mniej niż wygranych, bądź przegranych. Pomimo niedostatecznej jakości głowicy value, model jest wspomagany przez drzewo MCTS, które w dużej mierze poprawia jakość predykcji.
+\newpage
 
 \begin{figure}[h]
 \centering
@@ -274,10 +282,14 @@ Macierz pomyłek dla głowicy value podobnie jak wykres loss wskazuje na problem
 \caption{Macierz pomyłek dla głowicy value.}
 \end{figure}
 
-Wykres dokładności top-10 dla głowicy policy, pokazuje że głowica policy bardzo dobrze sobie radzi z przewidywaniem ruchów. W 81 procentach przypadków prawidłowy ruch znajduje się wśród 3 najwyższych przewidywań sieci. Miara ta oddaje znacznie lepiej jakość modelu, niż zwykła dokładność oparta o najwyższy wynik, gdyż w szachach nie istnieje tylko jeden prawidłowy ruch. Często istnieje kilka dobrych posunięć, które następnie są analizowane przez drzewo MCTS.
-
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.7\textwidth]{images/top-k-acc.png}
 \caption{Wykres dokładności top-10 dla głowicy policy.}
 \end{figure}
+
+\newpage
+
+\section{Wnioski z użytego modelu}
+Na podstawie przeprowadzonych eksperymentów można stwierdzić jeden główny problem opisywanego modelu. Jest nim niska jakość głowicy value. Jest ona przede wszystkim spowodowana słabą jakością danych treningowych, które są generowane na podstawie końcowego wyniku partii. Oznacza to, że stany plansz nie są indywidualnie etykietowane na podstawie ich faktycznej wartości. Problem ten jest szczególnie widoczny w początkowej fazie rozgrywki, gdzie przewidzenie wyniku na podstawie samej pozycji jest praktycznie niemożliwe.
+Rozwiązaniem może być zastosowanie innego silnika szachowego do tworzenia etykiet podczas generowania zbioru danych. Nadawane by były one indywidualnie dla każdego stanu, niezależnie od końcowego wyniku. Aczkolwiek celem niniejszej pracy było stworzenie od podstaw całego algorytmu, niezależnego od istniejących rozwiązań, dlatego też nie zdecydowano się na takie podejście.

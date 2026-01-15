@@ -1,15 +1,24 @@
 \setcounter{chapter}{4}
 \chapter[Architektura aplikacji serwerowej {[\textit{Michał Lichtarski}]}]{Architektura aplikacji serwerowej}
 
-W tej części zostanie przybliżona architekrura aplikacji serwerowej na której opiera się cała omawiana praca.
+W tej części zostanie przybliżona architektura aplikacji serwerowej oraz protokół komunikacji na której opiera się cała praca.
 
-\section{Komunikacja GUI z silnikiem szachowym}
-Do komunikacji z silnikiem szachowym została stworzona klasa \textit{Communication}. Działa ona w oparciu o \textit{sockety}, gdzie każdy klient jest obłusgiwany w osobnym wątku. Ze względu na ograniczenia wydajnościowe, niezależnie od ilości klientów działa tylko jedna instancja silnika szachowego. W momencie otrzymania zapytania od klientów, wiadomości są kolejkowane i obsługiwane w kolejności ich nadejścia.
+\section{Komunikacja}
+Do komunikacji między dwoma częściami przedstawianej pracy, została stworzona klasa \textit{Communication}. Działa ona w oparciu o \textit{sockety}, gdzie każdy klient jest obsługiwany w osobnym wątku. Ze względu na ograniczenia wydajnościowe, niezależnie od ilości klientów działa tylko jedna instancja silnika szachowego. W momencie otrzymania zapytania od klientów, wiadomości są kolejkowane i obsługiwane w kolejności ich nadejścia.
 
-Wiadomości są w postaci \textit{JSON} i zawierają następujące 2 pola: \textit{command} oraz \textit{boards}. Pole \textit{command} zawiera komendę do wykonania. W obecnej wersji jest tylko jedna komenda \textit{get\_move}, która przekazuje do silnika szachowego aktualne stany plansz i zwraca odpowiedź z najlepszym ruchem. Pole \textit{boards} zawiera listę stanów planszy w formacie \textit{FEN}. Silnik podejmuje decyzję o ruchu na podstawie do 3 stanów.
+Podobnie to wygląda po stronie klienta, gdzie klasa \textit{ClientCommunication} odpowiada za wysyłanie oraz odbieranie wiadomości od serwera. Podobnie jak w przypadku serwera działa ona w osobnym wątku oraz korzysta z kolejkowania wiadomości.
+
+Wiadomości są w postaci \textit{JSON} i zawierają następujące 2 pola: \textit{command} oraz \textit{boards}. Pole \textit{command} zawiera komendę do wykonania. W obecnej wersji jest tylko jedna komenda \textit{get\_move}, która przekazuje do silnika szachowego aktualne stany plansz i zwraca odpowiedź z najlepszym ruchem. Pole \textit{boards} zawiera listę stanów planszy w formacie \textit{FEN}. Silnik podejmuje decyzję o ruchu na podstawie do 3 stanów. Po ich analizie zwraca odpowiedź z polem \textit{move}, które zawiera najlepszy ruch.
 
 \section{Interfejs aplikacji serwerowej}
 Aplikacja serwerowa obługiwana jest poprzez prosty interfejs konsolowy, pozwalający na wywoływanie funkcji. Po wpisaniu komendy \textit{help} wyświetlana jest lista dostępnych komend wraz z ich krótkim opisem. Dodatkowo wyświetlone są parametry jakie obsługują. Kwadratowe nawiasy oznaczają parametry opcjonalne. W celu lepszej automatyzacji serwera, w pliku konfiguracyjnym pod nazwą \textit{startCommands} można wpisać listę komend wraz z argumentami, które zostaną automatycznie wywołane po starcie aplikacji.
+
+Komendy są pogrupowane w trzy kategorie:
+\begin{itemize}
+    \item \textbf{Ogólne - } Pozwalają na tworzenie serwera oraz wypisanie statusu aplikacji serwerowej.
+    \item \textbf{Zarządzenie siecią neuronową - } Pozwalają na ładowanie oraz tworzenie modeli, a także na konwertowanie zbioru danych.
+    \item \textbf{Ewaluacja - } Pozwalają na ewaluacje całego silnika szachowego lub samej sieci neuronowej.
+\end{itemize}
 
 \newpage
 
@@ -18,51 +27,3 @@ Aplikacja serwerowa obługiwana jest poprzez prosty interfejs konsolowy, pozwala
 \includegraphics[width=1\textwidth]{images/app_interfejs.png}
 \caption{Interfejs aplikacji serwerowej}
 \end{figure}
-
-\section{Testowe środowisko klienckie}
-Do testowania aplikacji serwerowej została stworzona prosta graficzna aplikacja kliencka, która umożliwia grę w szachy. Została stworzona w języku Python z wykorzystaniem biblioteki PyGame. Działanie opiera się na zamianie obiektu board z biblioteki chess na plansze szachową z figurami, gdzie każda z nich jest w postaci zdjęcia z usuniętym tłem. Umożliwia również wykonywanie ruchów białymi figurami przez użytkownika. Interfejs graficzny dopuszcza i pokazuje tylko poprawne ruchy. W momencie gdy jest tura przeciwnika, wywoływany jest listener zwracający obiekt move. Taka struktura pozawala na bardzo łatwą implementację dowolnego algorytmu. 
-
-W tym przypadku w listenerze jest wysyłane zapytanie do aplikacji serwerowej z aktualnymi stanami planszy. Po otrzymaniu odpowiedzi ruch jest wykonywany na planszy.
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=0.4\textwidth]{images/gui_czyste.png}
-\hspace{1cm}
-\includegraphics[width=0.4\textwidth]{images/gui_ruch.png}
-\caption{intefejs graficzny}
-\end{figure}
-
-\newpage
-
-\lstset{style=codeListingStyle}
-\begin{lstlisting}[
-    language=Python, 
-    caption=Przykładowe użycie gui,
-    inputencoding=utf8
-]
-# obiekt board na ktorym dziala cala gra
-board = BoardPlus()
-game = ChessGUI(board)
-communication = Communication("localhost", 12345)
-
-def algorithm():
-    communication.send({
-        "command": "get_move",
-        "boards": game.get_last_states(3)
-    })
-
-    start = time.time()
-    while not communication.is_message_available():
-        # timeout
-        if time.time() - start > 150:
-            raise TimeoutError("No response from the chess engine.")
-        sleep(1)
-
-    message = communication.get_message()
-    move = chess.Move.from_uci(message["move"])
-
-    return move
-
-game.add_computer_algorithm_listener(algorithm)
-game.run()
-\end{lstlisting}
