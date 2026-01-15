@@ -1,10 +1,9 @@
-\section{Przetwarzanie i przygotowanie obrazu szachownicy}
+\setcounter{chapter}{5}
+\chapter[Przetwarzanie obrazu szachownicy {[\textit{Marcin Ziółkowski}]}]{Przetwarzanie obrazu szachownicy}
+ 
+Proces przygotowania szachownicy do analizy składa się z kilku etapów, mających na celu wyeliminowanie zniekształceń perspektywicznych oraz precyzyjne wykadrowanie obszaru gry. 
 
-Proces przygotowania szachownicy do analizy składa się z kilku etapów przetwarzania wstępnego, mających na 
-celu wyeliminowanie zniekształceń perspektywicznych oraz precyzyjne wykadrowanie obszaru gry. Moduł \texttt{BoardTransformation} 
-realizuje to zadanie poprzez detekcję markerów kolorystycznych oraz wykorzystanie algorytmów wizji komputerowej biblioteki OpenCV.
-
-\subsection{Detekcja punktów referencyjnych}
+\section{Detekcja punktów referencyjnych}
 
 Algorytm rozpoczyna pracę od segmentacji kolorów w przestrzeni barw HSV. Wykorzystywane są cztery markery: 
 jeden czerwony oraz trzy zielone, umieszczone w narożnikach fizycznej planszy. 
@@ -18,7 +17,7 @@ jeden czerwony oraz trzy zielone, umieszczone w narożnikach fizycznej planszy.
     Punkty te są wizualizowane jako kolorowe okręgi na obrazie \texttt{chapters/chess\_identification/images/steps/step2\_detected\_centers.png}.
 \end{itemize}
 
-\subsection{Orientacja i transformacja perspektywiczna}
+\section{Orientacja i transformacja perspektywiczna}
 
 Kluczowym elementem jest poprawna identyfikacja narożników na podstawie wzajemnych odległości punktów zielonych od punktu 
 czerwonego, który służy jako punkt odniesienia (\textit{top\_left}).
@@ -33,7 +32,7 @@ czerwonego, który służy jako punkt odniesienia (\textit{top\_left}).
 \end{itemize}
 
 
-\subsection{Precyzyjne kadrowanie i finalna normalizacja}
+\section{Precyzyjne kadrowanie i finalna normalizacja}
 
 Ostatnim etapem jest usunięcie zbędnych marginesów poza polem gry. Wykorzystywana jest do tego funkcja \texttt{findChessboardCornersSB}, 
 która wyszukuje wewnętrzne przecięcia linii szachownicy.
