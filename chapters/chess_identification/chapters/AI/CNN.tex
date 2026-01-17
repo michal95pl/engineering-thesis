@@ -36,15 +36,21 @@ W modelu zastosowano strukturę podwójnych warstw splotowych przed każdą oper
 
 \subsection{Redukcja wymiarowości i Global Average Pooling}
 
-Kluczowym elementem architektury jest przejście z przestrzennych map cech do wektora klasyfikacyjnego. W tradycyjnych podejściach stosowano warstwy \texttt{Flatten} bezpośrednio po ostatnim splotcie, co generowało tysiące połączeń. W \texttt{ChessCNN} zastosowano nowoczesne podejście \textbf{Global Average Pooling (GAP)}.
+Kluczowym elementem architektury jest przejście z przestrzennych map cech do wektora klasyfikacyjnego. W tradycyjnych podejściach stosowano warstwy \texttt{Flatten} bezpośrednio po ostatnim splocie, co generowało tysiące połączeń i sprawiało, że model był podatny na przeuczenie (ang. \textit{overfitting}). W \texttt{ChessCNN} zastosowano nowoczesne rozwiązanie – \textbf{Global Average Pooling (GAP)}.
 
 
+Global Average Pooling to operacja, która zamiast spłaszczać mapy cech do jednego długiego wektora, oblicza średnią arytmetyczną ze wszystkich pikseli każdej mapy cech z osobna. Jeśli na wyjściu ostatniej warstwy splotowej otrzymujemy 128 map o wymiarach $7 \times 7$, to warstwa GAP zredukuje każdą taką mapę do pojedynczej liczby. 
 
-Operacja \texttt{AdaptiveAvgPool2d(1)} uśrednia każdą ze 128 map cech o wymiarze $7 \times 7$ do pojedynczej wartości. Ma to trzy główne zalety:
+Matematycznie operację tę dla danej mapy cech $F_k$ o wymiarach $H \times W$ można zapisać jako:
+\begin{equation}
+    GAP(F_k) = \frac{1}{H \times W} \sum_{i=1}^{H} \sum_{j=1}^{W} F_{k}(i, j)
+\end{equation}
+
+Operacja \texttt{AdaptiveAvgPool2d(1)} uśrednia każdą ze 128 map cech do pojedynczej wartości. Ma to trzy główne zalety:
 \begin{enumerate}
-    \item \textbf{Redukcja parametrów:} Liczba wag w warstwie klasyfikatora zależy tylko od liczby filtrów w ostatnim bloku, a nie od rozdzielczości obrazu.
-    \item \textbf{Odporność na przesunięcia:} Uśrednianie sprawia, że wynik jest inwariantny względem dokładnego położenia aktywowanej cechy w polu widzenia.
-    \item \textbf{Interpretowalność:} Każda z 128 wartości w końcowym wektorze reprezentuje siłę występowania konkretnego wzorca w całym obrazie pola.
+    \item \textbf{Drastyczna redukcja parametrów:} Liczba wag w warstwie klasyfikatora zależy wyłącznie od liczby filtrów w ostatnim bloku (w tym przypadku 128), a nie od rozdzielczości obrazu wejściowego. Dzięki temu model zajmuje znacznie mniej pamięci.
+    \item \textbf{Odporność na przesunięcia (Inwariantność przestrzenna):} Ponieważ uśredniamy całą mapę, nie ma znaczenia, w którym dokładnie miejscu piktogramu sieć wykryła charakterystyczną cechę (np. krzywiznę skoczka). Liczy się jedynie fakt jej wystąpienia w obrębie pola.
+    \item \textbf{Regularność i interpretowalność:} GAP wymusza na warstwach splotowych bycie "detektorami konkretnych obiektów". Każda z 128 wartości w końcowym wektorze bezpośrednio reprezentuje pewność wystąpienia konkretnego wzorca wizualnego w całym obrazie, co naturalnie łączy mapy cech z końcowymi kategoriami bierek.
 \end{enumerate}
 
 \newpage
@@ -57,7 +63,9 @@ Ostatnim etapem jest dwuwarstwowy klasyfikator. Zastosowanie warstwy \texttt{Dro
     y = \text{softmax}(W \cdot (\text{dropout}(f)) + b)
 \end{equation}
 
-Podczas treningu losowo wyłączane jest 20\% neuronów, co wymusza na sieci tworzenie redundantnych ścieżek przepływu informacji i zapobiega sytuacji, w której model "zapamiętuje" konkretne szumy obecne na zdjęciach treningowych (overfitting). Finalna warstwa \texttt{Linear} mapuje 128 cech na 6 klas bierek, a funkcja \texttt{LogSoftmax} (zaszyta w \texttt{CrossEntropyLoss}) zwraca rozkład prawdopodobieństwa dla każdej klasy.
+Podczas treningu losowo wyłączane jest 20\% neuronów, co wymusza na sieci tworzenie redundantnych ścieżek przepływu informacji i zapobiega sytuacji, w której model "zapamiętuje" konkretne szumy obecne na zdjęciach treningowych (overfitting). 
+
+Finalna warstwa \texttt{Linear} mapuje 128 cech na 6 klas bierek. W procesie uczenia funkcja \texttt{LogSoftmax} (zaszyta w \texttt{CrossEntropyLoss}) wyznacza rozkład prawdopodobieństwa dla każdej klasy. Należy jednak zaznaczyć, że w fazie inferencji (identyfikacji bierek na szachownicy), celem uzyskania ostatecznej decyzji modelu, pomija się obliczanie prawdopodobieństw. Zamiast tego wybierany jest indeks o najwyższej wartości wyjściowej – tzw. najwyższy logit – za pomocą operacji \texttt{argmax}. Jest to podejście optymalne obliczeniowo, gdyż funkcja Softmax jest monotoniczna i nie zmienia relacji porządku między wynikami.
 
 \begin{table}[h]
 \centering
@@ -107,6 +115,9 @@ criterion = torch.nn.CrossEntropyLoss(weight=piece_weights.to(device))
 
 Dzięki temu zabiegowi, błąd popełniony przy rozpoznawaniu Króla generuje znacznie silniejszy sygnał gradientu niż błąd przy Pionie, co wymusza na optymalizatorze \texttt{AdamW} znalezienie takich wag modelu, które precyzyjnie oddzielają rzadkie klasy od reszty zbioru.
 
+
+Warto podkreślić istotny szczegół implementacyjny: zastosowana w projekcie klasa \texttt{torch.nn.CrossEntropyLoss} w bibliotece PyTorch łączy w sobie operację \texttt{LogSoftmax} oraz \texttt{NLLLoss} (ang. \textit{Negative Log Likelihood Loss}) w jednej, numerycznie stabilnej funkcji. Z tego powodu architektura \texttt{ChessCNN} nie posiada jawnej warstwy Softmax na wyjściu. Sieć generuje surowe wyniki (logity), które są przekształcane na prawdopodobieństwa wewnętrznie przez funkcję kosztu wyłącznie podczas obliczania straty w fazie treningu. Takie rozwiązanie zapobiega problemom z niestabilnością gradientów, które mogłyby wystąpić przy ręcznym składaniu tych operacji.
+
 \subsection{Optymalizacja i stabilizacja gradientu}
 
 W procesie uczenia wykorzystano optymalizator \texttt{AdamW} (Adam z poprawionym \textit{Weight Decay}), który łączy zalety adaptacyjnego współczynnika uczenia z poprawną regularyzacją $L_2$. 
@@ -132,7 +143,7 @@ Proces uczenia trwał 12 epok z wykorzystaniem \texttt{CosineAnnealingLR}. Pomim
     \caption{Przebieg funkcji straty oraz dokładności – stabilizacja dzięki harmonogramowi cosinusoidalnemu.}
 \end{figure}
 
-Głównym problemem są cienie i odbicia światła na powierzchni tokenów. Ponieważ model operuje na dwuwymiarowych symbolach, silne odblaski mogą zniekształcić kontury piktogramu, prowadząc do błędnej klasyfikacji (np. mylenia Gońca ze Skoczkiem, jeśli odblask "odcina" fragment piktogramu). Aby zminimalizować ten efekt, w procesie uczenia wykorzystano techniki augmentacji (biblioteka \texttt{Albumentations}), takie jak zmiany jasności, kontrastu oraz dodawanie szumu Gaussa, co ma na celu symulację trudnych warunków oświetleniowych panujących w rzeczywistym środowisku rozgrywki.
+Głównym problemem są cienie i odbicia światła na powierzchni tokenów. Ponieważ model operuje na dwuwymiarowych symbolach, silne odblaski mogą zniekształcić kontury piktogramu, prowadząc do błędnej klasyfikacji (np. mylenia Gońca ze Skoczkiem, jeśli odblask "odcina" fragment piktogramu). Aby zminimalizować ten efekt, w procesie uczenia wykorzystano techniki augmentacji (biblioteka \texttt{Albumentations} \cite{Albumentations}), takie jak zmiany jasności, kontrastu oraz dodawanie szumu Gaussa, co ma na celu symulację trudnych warunków oświetleniowych panujących w rzeczywistym środowisku rozgrywki.
 
 \begin{figure}[H]
     \centering

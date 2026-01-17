@@ -1,7 +1,16 @@
 \setcounter{chapter}{6}
-\chapter[Identyfikacja bierek szachowych {[\textit{Marcin Ziółkowski}]}]{Identyfikacja bierek szachowych}
+\chapter[Identyfikacja i lokalizacja bierek {[\textit{Marcin Ziółkowski}]}]{Identyfikacja i lokalizacja bierek}
 
-Po dokonaniu transformacji perspektywicznej szachownicy, system przystępuje do fazy identyfikacji bierek. Proces ten odbywa się iteracyjnie dla każdego z 64 pól szachownicy i składa się z trzech głównych etapów: segmentacji lokalnej, ekstrakcji obiektu (kadrowania elipsoidalnego) oraz klasyfikacji za pomocą splotowej sieci neuronowej (CNN).
+Po dokonaniu transformacji perspektywicznej szachownicy, system przystępuje do kluczowej fazy określenia stanu gry. Proces ten łączy techniki klasycznego przetwarzania obrazu z głębokim uczeniem maszynowym i składa się z trzech głównych filarów: precyzyjnej lokalizacji obiektów, identyfikacji ich typu oraz koloru, a także finalnej konwersji danych do formatu FEN za pomocą modułu walidacyjnego.
+
+\section{Metodyka lokalizacji bierek}
+Lokalizacja bierek w systemie realizowana jest dwuetapowo, co zapewnia wysoką odporność na niedokładności mechaniczne oraz błędy w orientacji tokenów.
+
+\subsection{Lokalizacja siatkowa (Grid-based Localization)}
+Pierwszym stopniem lokalizacji jest podział zrektyfikowanego obrazu szachownicy na regularną siatkę $8 \times 8$. Dzięki wcześniejszej transformacji perspektywicznej, każde z 64 pól posiada stałe współrzędne relatywne. System iteracyjnie wycina fragmenty obrazu odpowiadające poszczególnym polom, co stanowi wstępną lokalizację obiektu w strukturze szachownicy.
+
+\subsection{Lokalizacja wewnątrz pola i detekcja obecności}
+Wewnątrz każdego wyciętego pola klasa \texttt{EllipseCrop} przeprowadza precyzyjną lokalizację obiektu. Wykorzystanie funkcji \texttt{cv2.fitEllipse} pozwala na wyznaczenie środka ciężkości bierki. Jeśli algorytm nie odnajdzie konturów spełniających kryteria rozmiarowe (funkcja \texttt{find}), pole klasyfikowane jest jako puste. Zapobiega to błędnym predykcjom sieci CNN dla szumu tła lub cieni.
 
 \section{Lokalne progowanie adaptacyjne}
 Ze względu na zmienne warunki oświetleniowe oraz cienie rzucane przez figury, zastosowanie globalnego progu binaryzacji okazało się niewystarczające. Algorytm wyznacza progi na podstawie analizy bimodalnej histogramu intensywności pikseli dla każdego pola z osobna.
@@ -32,13 +41,13 @@ def hist_modification(hist):
 Klasa \texttt{EllipseCrop} realizuje autorską metodę kadrowania opartego na detekcji elipsy podstawy figury. Proces ten ma na celu ujednolicenie danych wejściowych dla sieci neuronowej poprzez usunięcie tła pola szachownicy. Poniżej przedstawiono siedem kluczowych etapów przetwarzania obrazu w tej fazie:
 
 \begin{enumerate}
-    \item \textbf{Obraz wejściowy i binaryzacja (Gray):} Obraz pola zostaje skonwertowany do odcieni szarości, a następnie poddany progowaniu przy użyciu lokalnego progu $T$.
-    \item \textbf{Detekcja krawędzi (Edges):} Wykorzystanie operatora Canny'ego z progami $bright\_node$ i $dark\_node$ w celu wykrycia konturów figury i jej podstawy.
-    \item \textbf{Dylatacja (Dilated):} Zastosowanie operacji morfologicznej dylatacji w celu pogrubienia i domknięcia wykrytych krawędzi.
-    \item \textbf{Wizualizacja detekcji (Ellipse):} Naniesienie na obraz oryginalny najlepiej dopasowanej elipsy (funkcja \texttt{cv2.fitEllipse}) wyliczonej na podstawie największego znalezionego konturu.
-    \item \textbf{Maska binarna (Mask):} Wygenerowanie czarno-białej maski, gdzie wnętrze elipsy (lub okręgu domyślnego w przypadku braku detekcji) wypełnione jest kolorem białym.
-    \item \textbf{Segmentacja (Masked):} Nałożenie maski na obraz za pomocą operacji \texttt{bitwise\_and}, co skutkuje wycięciem figury z tła.
-    \item \textbf{Normalizacja rozmiaru (Cropped):} Przeskalowanie wyciętego obiektu do formatu wejściowego sieci ($30 \times 30$ pikseli).
+    \item \textbf{Obraz wejściowy i binaryzacja (Gray):} Obraz pola zostaje skonwertowany do odcieni szarości i poddany progowaniu przy użyciu lokalnego progu $T$.
+    \item \textbf{Detekcja krawędzi (Edges):} Wykorzystanie operatora Canny'ego z progami adaptacyjnymi.
+    \item \textbf{Dylatacja (Dilated):} Domykanie konturów za pomocą operacji morfologicznej.
+    \item \textbf{Wizualizacja detekcji (Ellipse):} Dopasowanie elipsy do największego konturu (\texttt{cv2.fitEllipse}).
+    \item \textbf{Maska binarna (Mask):} Wygenerowanie maski wypełniającej wnętrze elipsy.
+    \item \textbf{Segmentacja (Masked):} Wycięcie obiektu z tła (\texttt{bitwise\_and}).
+    \item \textbf{Normalizacja rozmiaru (Cropped):} Przeskalowanie obiektu do formatu $30 \times 30$ pikseli.
 \end{enumerate}
 
 \begin{figure}[H]
@@ -113,25 +122,60 @@ def apply(self, img, thr, bright_node, dark_node, step_visualize=None):
 
 \newpage
 
-\section{Detekcja koloru i klasyfikacja bierek}
-Rozpoznanie typu bierki odbywa się poprzez przekazanie przetworzonego obrazu pola o rozmiarze $30 \times 30$ pikseli do modelu \texttt{ChessCNN}. Przed klasyfikacją obraz poddawany jest normalizacji kanałów.
+\section{Identyfikacja bierek i przygotowanie danych}
+Rozpoznanie typu i koloru bierki odbywa się poprzez fuzję wyników prostej detekcji koloru oraz predykcji sieci splotowej.
 
-Poniższy fragment kodu z klasy \texttt{BoardIdentification} obrazuje proces przygotowania danych i predykcji:
+\subsection{Detekcja koloru i klasyfikacja CNN}
+Kolor bierki ('W' lub 'B') określany jest na podstawie średniej intensywności jasności segmentu w odniesieniu do progu $T$. Typ bierki (np. Pawn, King) wybierany jest na podstawie najwyższego logitu zwróconego przez model \texttt{ChessCNN}.
 
-\begin{lstlisting}[style=codeListingStyle, caption={Proces preprocesingu i klasyfikacji pola}]
-def preprocess(self, square):
-    if len(square.shape) == 3:
-        square = square[:, :, ::-1] # BGR to RGB
-    img = val_tf(image=square)['image'].unsqueeze(0)
-    return img.to(self.device)
+\subsection{Kodowanie tablicy szachowej}
+Po zakończeniu iteracji przez wszystkie pola, klasa \texttt{BoardIdentification} wykonuje kluczowy krok mapowania wyników na notację algebraiczną za pomocą metody \texttt{encode\_board}. Metoda ta transformuje pary (kolor, typ) na standardowe, jednoznakowe symbole (np. biały goniec $\rightarrow$ 'B', czarny skoczek $\rightarrow$ 'n'). Tak przygotowana tablica $8 \times 8$ stanowi ustandaryzowane wejście dla modułów logiki szachowej.
 
-def identify(self, size=8):
-    img = self.preprocess(sq)
-    with torch.no_grad():
-        output = self.model(img)
-        piece_idx = output.argmax(1).item()
-    color = self.detect_color(sq, thr)
-    row.append(f"{color}_{self.pieces[piece_idx]}")
+\begin{lstlisting}[style=codeListingStyle, caption={Proces identyfikacji i kodowania pola}]
+# Fragment BoardIdentification.identify
+color = self.detect_color(sq, thr)
+img = self.preprocess(sq)
+pp = self.model(img)
+pi = pp.argmax(1).item() # Najwyzszy logit
+row.append(f"{color}_{self.pieces[pi]}")
+
+# Fragment BoardIdentification.encode_board
+mapping = {"W_King": "K", "B_King": "k", ...}
+encoded_row.append(mapping.get(cell, " "))
 \end{lstlisting}
 
-Wynik końcowy jest mapowany na notację algebraiczną, co umożliwia zapisanie aktualnego stanu gry w formacie zrozumiałem dla algorytmów przeszukiwania stanów.
+\section{Integracja i walidacja stanu (JsonUpdater)}
+Ostatnim etapem jest przekazanie zakodowanej tablicy do klasy \texttt{JsonUpdater}. Moduł ten pełni rolę pomostu pomiędzy warstwą wizyjną a silnikiem szachowym.
+
+\subsection{Konwersja na obiekty szachowe}
+Metoda \texttt{convert\_chessBoard} w klasie \texttt{JsonUpdater} przyjmuje tablicę z jednoznakowymi identyfikatorami. Dzięki temu proces tworzenia obiektu \texttt{chess.Piece} jest uproszczony do bezpośredniego odczytu z mapy symboli.
+
+\begin{lstlisting}[style=codeListingStyle, caption={Konwersja identyfikatorow na obiekty biblioteki python-chess}]
+def convert_chessBoard(self, newlist):
+    board = chess.Board(None)
+    piece_map = {
+        'P': chess.Piece(chess.PAWN, chess.WHITE),
+        'R': chess.Piece(chess.ROOK, chess.WHITE),
+        'N': chess.Piece(chess.KNIGHT, chess.WHITE),
+        'B': chess.Piece(chess.BISHOP, chess.WHITE),
+        'Q': chess.Piece(chess.QUEEN, chess.WHITE),
+        'K': chess.Piece(chess.KING, chess.WHITE),
+
+        'p': chess.Piece(chess.PAWN, chess.BLACK),
+        'r': chess.Piece(chess.ROOK, chess.BLACK),
+        'n': chess.Piece(chess.KNIGHT, chess.BLACK),
+        'b': chess.Piece(chess.BISHOP, chess.BLACK),
+        'q': chess.Piece(chess.QUEEN, chess.BLACK),
+        'k': chess.Piece(chess.KING, chess.BLACK),
+    }
+    for row in range(8):
+        for col in range(8):
+            cell = newlist[row][col]
+            if cell != ' ':
+                square = chess.square(col, 7 - row)
+                board.set_piece_at(square, piece_map[cell])
+    return board
+\end{lstlisting}
+
+\subsection{Walidacja i zapis FEN}
+Przed zapisaniem stanu do pliku \texttt{data.json}, \texttt{JsonUpdater} weryfikuje poprawność przejścia (funkcja \texttt{is\_transition\_possible}). Sprawdzane jest, czy wykryty stan wynika z dozwolonego ruchu, co pozwala wyeliminować błędy spowodowane chwilowym przesłonięciem szachownicy przez rękę gracza. Finalny stan gry zapisywany jest w formacie FEN, co umożliwia natychmiastową analizę przez doradcę AI.
