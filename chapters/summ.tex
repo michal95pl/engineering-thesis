@@ -1,0 +1,21 @@
+\section*{Podsumowanie}
+\addcontentsline{toc}{chapter}{Podsumowanie}
+Celem pracy było zaprojektowanie oraz implementacja kompletnego systemu do gry w szachy, który łączy równoległy silnik szachowy oparty na algorytmie Monte Carlo Tree Search z modułem analizy obrazu fizycznej szachownicy.
+
+Pierwszy element systemu stanowił silnik szachowy wykorzystujący algorytm MCTS wspomagany głęboką siecią neuronową. Jest ona oparta o architekturę rezydualną rozszerzoną o bloki Squeeze and Excitation oraz funkcję aktywacji SiLU. Zbiór danych treningowych pochodzi z Lichess Elite Database, zawierający partie mistrzowskie. 
+
+Kluczowym aspektem pracy było zrównoleglenie algorytmu MCTS zarówno z perspektywy CPU jaki i GPU. Wykorzystano w tym celu metodę wieloprocesowego Tree Parallelization, technikę WU-UCT oraz mechanizm batchowania danych, co pozwoliło na efektywniejsze wykorzystanie zasobów sprzętowych.
+
+Przeprowadzone eksperymenty wykazały wysoką skuteczność głowicy policy sieci neuronowej, jednakże głowica value osiągnęła słabsze wyniki.
+
+Drugim filarem pracy był system identyfikacji bierek szachowych na fizycznej planszy. Została ona specjalnie zaprojektowana z kolorowymi znacznikami w narożnikach, a także stworzono dedykowane figury ułatwiające ich detekcję.
+
+Do detekcji planszy i bierek wykorzystano techniki przetwarzania obrazu oraz model sieci neuronowej z warstwami konwolucyjnymi. System został stworzony tak, aby mógł działać w pogorszonych warunkach oświetleniowych z uwzględnieniem cieni.
+
+
+Oba moduły zostały zintegorwane poprzez interfejs komunikacyjny, tworząc kompletny system do gry w szachy na fizycznej planszy.
+
+
+Elementami pracy, które mogłyby zostać udoskonalone w przyszłości to przede wszystkim głowica value sieci neuronowej, która osiągnęła słabsze wyniki niż oczekiwano. 
+
+Kolejnym aspektem mogłoby być rozwinięcie modułu analizy obrazu, tak aby działał z wykorzystaniem standardowych bierek i planszy szachowej, bez konieczności stosowania specjalnych znaczników.
