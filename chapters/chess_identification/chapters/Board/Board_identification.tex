@@ -1,0 +1,134 @@
+\setcounter{chapter}{6}
+\chapter[Proces identyfikacji bierek szachowych {[\textit{Marcin Ziółkowski}]}]{Identyfikacja bierek szachowych}
+
+Po dokonaniu transformacji perspektywicznej i uzyskaniu znormalizowanego obrazu szachownicy, system przystępuje do fazy identyfikacji bierek. Proces ten odbywa się iteracyjnie dla każdego z 64 pól szachownicy i składa się z trzech głównych etapów: segmentacji lokalnej, ekstrakcji obiektu (kadrowania elipsoidalnego) oraz klasyfikacji za pomocą splotowej sieci neuronowej (CNN).
+
+\section{Lokalne progowanie adaptacyjne}
+Ze względu na zmienne warunki oświetleniowe oraz cienie rzucane przez figury, zastosowanie globalnego progu binaryzacji okazało się niewystarczające. Algorytm wyznacza progi na podstawie analizy bimodalnej histogramu intensywności pikseli dla każdego pola z osobna.
+
+\begin{equation}
+    T = \frac{mode_{dark} + mode_{bright}}{2}
+\end{equation}
+
+Poniżej przedstawiono implementację funkcji wyznaczającej próg na podstawie histogramu:
+
+\begin{lstlisting}[style=codeListingStyle, caption={Analiza bimodalna histogramu do wyznaczenia progu}]
+def hist_modification(hist):
+    dark_mode = np.argmax(hist[1:128])
+    bright_mode = np.argmax(hist[128:]) + 128
+    thr = (dark_mode + bright_mode) / 2
+    return thr, bright_mode, dark_mode
+\end{lstlisting}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=1\textwidth]{chapters/chess_identification/images/Binary_treshold.png}
+\caption{Wykres ilustrujący lokalne progowanie adaptacyjne dla pola szachownicy}
+\end{figure}
+
+\section{Ekstrakcja obiektu i Ellipse Crop}
+Klasa \texttt{EllipseCrop} realizuje autorską metodę kadrowania opartego na detekcji elipsy podstawy figury. Proces ten ma na celu ujednolicenie danych wejściowych dla sieci neuronowej poprzez usunięcie tła pola szachownicy. Poniżej przedstawiono siedem kluczowych etapów przetwarzania obrazu w tej fazie:
+
+\begin{enumerate}
+    \item \textbf{Obraz wejściowy i binaryzacja (Gray):} Obraz pola zostaje skonwertowany do odcieni szarości, a następnie poddany progowaniu przy użyciu lokalnego progu $T$.
+    \item \textbf{Detekcja krawędzi (Edges):} Wykorzystanie operatora Canny'ego z progami $bright\_node$ i $dark\_node$ w celu wykrycia konturów figury i jej podstawy.
+    \item \textbf{Dylatacja (Dilated):} Zastosowanie operacji morfologicznej dylatacji w celu pogrubienia i domknięcia wykrytych krawędzi.
+    \item \textbf{Wizualizacja detekcji (Ellipse):} Naniesienie na obraz oryginalny najlepiej dopasowanej elipsy (funkcja \texttt{cv2.fitEllipse}) wyliczonej na podstawie największego znalezionego konturu.
+    \item \textbf{Maska binarna (Mask):} Wygenerowanie czarno-białej maski, gdzie wnętrze elipsy (lub okręgu domyślnego w przypadku braku detekcji) wypełnione jest kolorem białym.
+    \item \textbf{Segmentacja (Masked):} Nałożenie maski na obraz za pomocą operacji \texttt{bitwise\_and}, co skutkuje wycięciem figury z tła.
+    \item \textbf{Normalizacja rozmiaru (Cropped):} Przeskalowanie wyciętego obiektu do formatu wejściowego sieci ($30 \times 30$ pikseli).
+\end{enumerate}
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{chapters/chess_identification/images/steps/identification_Gray1.png}
+        \caption{Etap 1: Binaryzacja}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{chapters/chess_identification/images/steps/identification_Edges2.png}
+        \caption{Etap 2: Krawędzie Canny}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{chapters/chess_identification/images/steps/identification_Dilated3.png}
+        \caption{Etap 3: Dylatacja}
+    \end{minipage}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.24\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{chapters/chess_identification/images/steps/identification_Ellipse4.png}
+        \caption{Etap 4: Detekcja}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.24\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{chapters/chess_identification/images/steps/identification_Mask5.png}
+        \caption{Etap 5: Maska}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.24\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{chapters/chess_identification/images/steps/identification_Masked6.png}
+        \caption{Etap 6: Wycięcie}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.24\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{chapters/chess_identification/images/steps/identification_Cropped7.png}
+        \caption{Etap 7: Skalowanie}
+    \end{minipage}
+\end{figure}
+
+Poniższy fragment kodu prezentuje główną logikę składania tych etapów:
+
+\begin{lstlisting}[style=codeListingStyle, caption={Zarządzanie potokiem przetwarzania Ellipse Crop}]
+def apply(self, img, thr, bright_node, dark_node, step_visualize=None):
+    self.step_visualize = step_visualize
+    H, W = img.shape[:2]
+    vis = img.copy()
+
+    best_ellipse = self.detect_ellipse(vis, thr, bright_node, dark_node, step_visualize=step_visualize)
+
+    mask = np.zeros((H, W), dtype=np.uint8)
+    cv2.ellipse(mask, best_ellipse, 255, -1)
+
+    masked = cv2.bitwise_and(img, img, mask=mask)
+    self._show("Masked_Final6", masked)
+    
+    resized = cv2.resize(masked, (30, 30))
+    self._show("Resized7", resized)
+    return resized
+\end{lstlisting}
+
+
+
+\section{Detekcja koloru i klasyfikacja bierek}
+Rozpoznanie typu bierki odbywa się poprzez przekazanie przetworzonego obrazu pola o rozmiarze $30 \times 30$ pikseli do modelu \texttt{ChessCNN}. Przed klasyfikacją obraz poddawany jest normalizacji kanałów.
+
+Poniższy fragment kodu z klasy \texttt{BoardIdentification} obrazuje proces przygotowania danych i predykcji:
+
+\begin{lstlisting}[style=codeListingStyle, caption={Proces preprocesingu i klasyfikacji pola}]
+def preprocess(self, square):
+    if len(square.shape) == 3:
+        square = square[:, :, ::-1] # BGR to RGB
+    img = val_tf(image=square)['image'].unsqueeze(0)
+    return img.to(self.device)
+
+def identify(self, size=8):
+    img = self.preprocess(sq)
+    with torch.no_grad():
+        output = self.model(img)
+        piece_idx = output.argmax(1).item()
+    color = self.detect_color(sq, thr)
+    row.append(f"{color}_{self.pieces[piece_idx]}")
+\end{lstlisting}
+
+Wynik końcowy jest mapowany na notację algebraiczną, co umożliwia zapisanie aktualnego stanu gry w formacie zrozumiałem dla algorytmów przeszukiwania stanów.

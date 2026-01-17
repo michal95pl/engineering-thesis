@@ -1,0 +1,102 @@
+\setcounter{chapter}{5}
+\chapter[Kadrowanie obrazu szachownicy {[\textit{Marcin Ziółkowski}]}]{Przetwarzanie obrazu szachownicy}
+
+Proces przygotowania szachownicy do analizy składa się z kilku etapów, mających na celu wyeliminowanie zniekształceń perspektywicznych oraz precyzyjne wykadrowanie obszaru rozgrywki. W poniższym rozdziale zostaną przedstawione poszczególne kroki tego procesu wraz z kluczowymi fragmentami implementacji.
+
+\section{Detekcja punktów referencyjnych} 
+
+Algorytm rozpoczyna pracę od segmentacji kolorów w przestrzeni barw HSV. Wykorzystywane są cztery markery: jeden czerwony oraz trzy zielone, umieszczone w narożnikach fizycznej planszy.
+
+\begin{itemize}
+    \item \textbf{Maskowanie kolorów:} Dla każdego koloru tworzona jest maska binarna przy użyciu progowania adaptacyjnego. Proces ten ilustruje rysunek 6.1.
+    \item \textbf{Morfologia i centroidy:} Za pomocą momentów obrazu (\texttt{cv2.moments}) wyliczane są środki ciężkości wykrytych konturów. 
+\end{itemize}
+
+Poniższy fragment kodu przedstawia metodę odpowiedzialną za wyznaczanie środków markerów:
+
+\begin{lstlisting}[style=codeListingStyle, caption={Wyznaczanie centroidów markerów kolorystycznych}]
+def __get_color_centers(self, mask, frame, color=(0, 255, 0), min_area=50):
+    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    centers = []
+    for cnt in contours:
+        area = cv2.contourArea(cnt)
+        if area > min_area:
+            M = cv2.moments(cnt)
+            if M["m00"] != 0:
+                cx = int(M["m10"] / M["m00"])
+                cy = int(M["m01"] / M["m00"])
+                centers.append((cx, cy))
+                cv2.circle(frame, (cx, cy), 8, color, 2)
+    return centers
+\end{lstlisting}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.4\textwidth]{chapters/chess_identification/images/steps/step1_red_mask.png}
+\hspace{0.5cm}
+\includegraphics[width=0.4\textwidth]{chapters/chess_identification/images/steps/step1_green_mask.png}
+\caption{Maski kolorów czerwonego i zielonego}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.6\textwidth]{chapters/chess_identification/images/steps/step2_detected_centers.png}
+\caption{Wykryte centroidy}
+\end{figure}
+
+\newpage
+
+\section{Orientacja i transformacja perspektywiczna}
+
+Następnym elementem jest poprawna identyfikacja narożników na podstawie wzajemnych odległości punktów zielonych od punktu czerwonego (\textit{top\_left}). 
+
+\begin{lstlisting}[style=codeListingStyle, caption={Logika identyfikacji narożników szachownicy}]
+def get_corners(self, red_points, green_points):
+    if len(red_points) != 1 or len(green_points) != 3:
+        raise Exception("Blad: potrzebny 1 czerwony i 3 zielone punkty")
+
+    red = red_points[0] # top_left
+    distances = [np.linalg.norm(np.array(red) - np.array(g)) for g in green_points]
+    farthest_idx = np.argmax(distances)
+    bottom_right = green_points[farthest_idx]
+    
+    others = [g for i, g in enumerate(green_points) if i != farthest_idx]
+    
+    return [red, top_right, bottom_right, bottom_left]
+\end{lstlisting}
+
+Po ustaleniu współrzędnych, obliczana jest macierz transformacji, która rzutuje zniekształcony czworokąt na kwadrat o wymiarach $800 \times 800$ pikseli (Rysunek 6.3).
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.4\textwidth]{chapters/chess_identification/images/steps/step3_board_with_diagonals.png}
+\hspace{0.5cm}
+\includegraphics[width=0.4\textwidth]{chapters/chess_identification/images/steps/step4_perspective_warped.png}
+\caption{Identyfikacja narożników oraz efekt transformacji perspektywicznej}
+\end{figure}
+
+\newpage
+
+\section{Precyzyjne kadrowanie i finalna normalizacja}
+
+Ostatnim etapem jest usunięcie marginesów poza polem gry. Wykorzystywana jest do tego funkcja \texttt{findChessboardCornersSB}, która wyszukuje wewnętrzne przecięcia linii.
+
+\begin{lstlisting}[style=codeListingStyle, caption={Transformacja perspektywiczna i przygotowanie do kadrowania}]
+def transform_to_square(self, frame, corners, size=800):
+    pts1 = np.float32(corners)
+    pts2 = np.float32([[0, 0], [size, 0], [size, size], [0, size]])
+    M = cv2.getPerspectiveTransform(pts1, pts2)
+    return cv2.warpPerspective(frame, M, (size, size))
+\end{lstlisting}
+
+\begin{enumerate}
+    \item \textbf{Subpixel Accuracy:} Pozycje narożników są uściślane algorytmem \texttt{cornerSubPix}.
+    \item \textbf{Kadrowanie:} Na podstawie wykrytych pól wyznaczany jest obszar cięcia z marginesem.
+    \item \textbf{Finalny wynik:} Rezultatem jest obraz idealnie wykadrowanej szachownicy (Rysunek 6.4).
+\end{enumerate}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.4\textwidth]{chapters/chess_identification/images/steps/step5_final_cropped.png}
+\caption{Finalny wynik po kadrowaniu i normalizacji szachownicy}
+\end{figure}
