@@ -1,20 +1,22 @@
 \setcounter{chapter}{7}
-\chapter[Convolutional Neural Network {[\textit{Marcin Ziółkowski}]}]{Convolutional Neural Network}
+\chapter[Architektura sieci neuronowej do klasyfikacji bierek {[\textit{Marcin Ziółkowski}]}]{Architektura sieci neuronowej do klasyfikacji bierek}
 
 Współczesne systemy wizyjne opierają swoją skuteczność na splotowych sieciach neuronowych (ang. \textit{Convolutional Neural Networks} – CNN). W przeciwieństwie do klasycznych sieci gęstych (MLP), sieci CNN są zaprojektowane tak, aby wykorzystywać przestrzenną strukturę danych obrazowych poprzez mechanizm współdzielenia wag i lokalnej spójności.
 
 \section{Teoretyczne podstawy działania sieci CNN}
 
-Fundamentem działania modelu jest operacja splotu (konwolucji). Polega ona na przesuwaniu małej macierzy wag, zwanej filtrem lub jądrem (ang. \textit{kernel}), nad obrazem wejściowym. Dzięki temu sieć jest w stanie wykrywać wzorce niezależnie od ich położenia w polu widzenia.
+Jak było dokładnie opisane w rozdziale 3, fundamentem działania warstwy konwolucyjnej jest operacja splotu. Polega ona na przesuwaniu małej macierzy wag, zwanej filtrem lub jądrem (ang. \textit{kernel}), nad obrazem wejściowym. Dzięki temu sieć jest w stanie wykrywać wzorce niezależnie od ich położenia w polu widzenia.
 
-
+\vspace{0.5cm}
 
 Fakty techniczne dotyczące ekstrakcji cech w modelu \texttt{ChessCNN}:
 \begin{itemize}
     \item \textbf{Hierarchia cech:} Pierwsze warstwy splotowe uczą się rozpoznawać proste krawędzie i kontury symboli na tokenach. Warstwy głębsze identyfikują złożone piktogramy, takie jak charakterystyczne zwieńczenie korony hetmana czy krzywizny piktogramu skoczka.
     \item \textbf{Inwariantność przestrzenna:} Dzięki zastosowaniu warstw \texttt{MaxPool2d}, sieć staje się odporna na niewielkie przesunięcia tokenu względem środka pola szachownicy.
-    \item \textbf{Normalizacja wsadowa (Batch Normalization):} Stabilizuje proces uczenia poprzez normalizację aktywacji, co zapobiega problemowi zanikającego gradientu i pozwala na stosowanie wyższych współczynników uczenia (\textit{learning rate}).
+    \item \textbf{Normalizacja wsadowa (Batch Normalization):} Stabilizuje proces uczenia poprzez normalizację aktywacji, co zapobiega problemowi zanikającego gradientu i pozwala na stosowanie wyższych współczynników uczenia (\textit{learning rate}). Warstwa ta również została szczegółowo omówiona w rozdziale 3.
 \end{itemize}
+
+\newpage
 
 \section{Szczegółowa architektura ChessCNN}
 
@@ -45,6 +47,8 @@ Operacja \texttt{AdaptiveAvgPool2d(1)} uśrednia każdą ze 128 map cech o wymia
     \item \textbf{Interpretowalność:} Każda z 128 wartości w końcowym wektorze reprezentuje siłę występowania konkretnego wzorca w całym obrazie pola.
 \end{enumerate}
 
+\newpage
+
 \subsection{Klasyfikator i regularyzacja}
 
 Ostatnim etapem jest dwuwarstwowy klasyfikator. Zastosowanie warstwy \texttt{Dropout} z parametrem $0.2$ przed warstwą liniową pełni rolę regularyzatora. 
@@ -72,7 +76,7 @@ Linear Classifier & 6 klas & ~800 \\ \hline
 
 \section{Strategia uczenia i obsługa nierównowagi klas}
 
-Jednym z najpoważniejszych wyzwań w projektowaniu systemów klasyfikacji obrazów medycznych lub dedykowanych dziedzinom o sztywnej strukturze (jak szachy) jest nierównowaga klas (ang. \textit{class imbalance}). W standardowej partii szachów stosunek liczby pionów do królów wynosi 8:1. 
+Jednym z najpoważniejszych wyzwań w projektowaniu systemów klasyfikacji obrazów jest nierównowaga klas (ang. \textit{class imbalance}), szczególnie w szachach, gdzie w standardowej partii stosunek liczby pionów do królów wynosi 8:1. 
 
 Bez odpowiedniej strategii, sieć neuronowa dążąc do minimalizacji globalnej funkcji straty, mogłaby popaść w stan "lenistwa statystycznego", klasyfikując większość obiektów jako piony i wciąż osiągając relatywnie wysoką dokładność, mimo całkowitej bezużyteczności w rozpoznawaniu kluczowych figur.
 
@@ -86,7 +90,7 @@ Aby przeciwdziałać temu zjawisku, zastosowano ważoną postać funkcji kosztu 
 
 gdzie $s_y$ jest wynikiem (ang. \textit{logit}) zwróconym przez sieć dla poprawnej klasy, a $w_y$ jest przypisaną jej wagą. Wagi zostały obliczone jako odwrotność częstości występowania danej klasy w zbiorze treningowym:
 
-
+\newpage
 
 \begin{lstlisting}[style=codeListingStyle, caption={Implementacja wag klas w procesie treningowym}]
 # Obliczenie liczebnosci klas
@@ -116,6 +120,8 @@ W procesie uczenia wykorzystano optymalizator \texttt{AdamW} (Adam z poprawionym
 
 Taka kombinacja – ważona funkcja kosztu oraz zaawansowany harmonogram uczenia – pozwoliła na uzyskanie modelu, który mimo wrażliwości na cienie i odblaski, wykazuje się wysoką czułością (ang. \textit{recall}) dla wszystkich figur, niezależnie od ich liczebności w zestawie.
 
+\newpage
+
 \section{Analiza wyników i wrażliwość modelu}
 
 Proces uczenia trwał 12 epok z wykorzystaniem \texttt{CosineAnnealingLR}. Pomimo osiągnięcia wysokiej dokładności w warunkach testowych, model wykazuje wrażliwość na czynniki zewnętrzne charakterystyczne dla fizycznych tokenów.
@@ -126,14 +132,10 @@ Proces uczenia trwał 12 epok z wykorzystaniem \texttt{CosineAnnealingLR}. Pomim
     \caption{Przebieg funkcji straty oraz dokładności – stabilizacja dzięki harmonogramowi cosinusoidalnemu.}
 \end{figure}
 
-Głównym problemem są cienie i odbicia światła na powierzchni tokenów. Ponieważ model operuje na dwuwymiarowych symbolach, silne odblaski mogą zniekształcić kontury piktogramu, prowadząc do błędnej klasyfikacji (np. mylenia Gońca ze Skoczkiem, jeśli odblask "odcina" fragment piktogramu).
+Głównym problemem są cienie i odbicia światła na powierzchni tokenów. Ponieważ model operuje na dwuwymiarowych symbolach, silne odblaski mogą zniekształcić kontury piktogramu, prowadząc do błędnej klasyfikacji (np. mylenia Gońca ze Skoczkiem, jeśli odblask "odcina" fragment piktogramu). Aby zminimalizować ten efekt, w procesie uczenia wykorzystano techniki augmentacji (biblioteka \texttt{Albumentations}), takie jak zmiany jasności, kontrastu oraz dodawanie szumu Gaussa, co ma na celu symulację trudnych warunków oświetleniowych panujących w rzeczywistym środowisku rozgrywki.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.75\textwidth]{chapters/chess_identification/images/Matrix.png}
     \caption{Macierz pomyłek modelu ChessCNN. Widoczne skupienie najwyższych wartości na przekątnej.}
 \end{figure}
-
-
-
-Aby zminimalizować ten efekt, w procesie uczenia wykorzystano techniki augmentacji (biblioteka \texttt{Albumentations}), takie jak zmiany jasności, kontrastu oraz dodawanie szumu Gaussa, co ma na celu symulację trudnych warunków oświetleniowych panujących w rzeczywistym środowisku rozgrywki.
