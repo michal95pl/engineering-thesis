@@ -1,7 +1,7 @@
 \setcounter{chapter}{6}
-\chapter[Proces identyfikacji bierek szachowych {[\textit{Marcin Ziółkowski}]}]{Identyfikacja bierek szachowych}
+\chapter[Identyfikacja bierek szachowych {[\textit{Marcin Ziółkowski}]}]{Identyfikacja bierek szachowych}
 
-Po dokonaniu transformacji perspektywicznej i uzyskaniu znormalizowanego obrazu szachownicy, system przystępuje do fazy identyfikacji bierek. Proces ten odbywa się iteracyjnie dla każdego z 64 pól szachownicy i składa się z trzech głównych etapów: segmentacji lokalnej, ekstrakcji obiektu (kadrowania elipsoidalnego) oraz klasyfikacji za pomocą splotowej sieci neuronowej (CNN).
+Po dokonaniu transformacji perspektywicznej szachownicy, system przystępuje do fazy identyfikacji bierek. Proces ten odbywa się iteracyjnie dla każdego z 64 pól szachownicy i składa się z trzech głównych etapów: segmentacji lokalnej, ekstrakcji obiektu (kadrowania elipsoidalnego) oraz klasyfikacji za pomocą splotowej sieci neuronowej (CNN).
 
 \section{Lokalne progowanie adaptacyjne}
 Ze względu na zmienne warunki oświetleniowe oraz cienie rzucane przez figury, zastosowanie globalnego progu binaryzacji okazało się niewystarczające. Algorytm wyznacza progi na podstawie analizy bimodalnej histogramu intensywności pikseli dla każdego pola z osobna.
@@ -22,9 +22,11 @@ def hist_modification(hist):
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=1\textwidth]{chapters/chess_identification/images/Binary_treshold.png}
+\includegraphics[width=0.9\textwidth]{chapters/chess_identification/images/Binary_treshold.png}
 \caption{Wykres ilustrujący lokalne progowanie adaptacyjne dla pola szachownicy}
 \end{figure}
+
+\newpage
 
 \section{Ekstrakcja obiektu i Ellipse Crop}
 Klasa \texttt{EllipseCrop} realizuje autorską metodę kadrowania opartego na detekcji elipsy podstawy figury. Proces ten ma na celu ujednolicenie danych wejściowych dla sieci neuronowej poprzez usunięcie tła pola szachownicy. Poniżej przedstawiono siedem kluczowych etapów przetwarzania obrazu w tej fazie:
@@ -87,6 +89,7 @@ Klasa \texttt{EllipseCrop} realizuje autorską metodę kadrowania opartego na de
     \end{minipage}
 \end{figure}
 
+\vspace{1cm}
 Poniższy fragment kodu prezentuje główną logikę składania tych etapów:
 
 \begin{lstlisting}[style=codeListingStyle, caption={Zarządzanie potokiem przetwarzania Ellipse Crop}]
@@ -108,7 +111,7 @@ def apply(self, img, thr, bright_node, dark_node, step_visualize=None):
     return resized
 \end{lstlisting}
 
-
+\newpage
 
 \section{Detekcja koloru i klasyfikacja bierek}
 Rozpoznanie typu bierki odbywa się poprzez przekazanie przetworzonego obrazu pola o rozmiarze $30 \times 30$ pikseli do modelu \texttt{ChessCNN}. Przed klasyfikacją obraz poddawany jest normalizacji kanałów.
