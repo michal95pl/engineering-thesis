@@ -1,35 +1,40 @@
 \section*{Streszczenie}
 \addcontentsline{toc}{chapter}{Streszczenie}
 
-Celem niniejszej pracy jest zaprojektowanie oraz implementacja równoległego silnika szachowego, opartego na algorytmie przeszukiwania drzewa Monte Carlo, wspomaganego głęboką siecią neuronową. Rozwiązanie inspirowane jest architekturą AlphaZero, wzbogaconą o współczesne techniki uczenia głębokiego.
+Celem niniejszej pracy jest zaprojektowanie oraz implementacja równoległego silnika szachowego wraz z modułem analizy obrazu.
+
+Algorytm szachowy jest oparty na algorytmie przeszukiwania drzewa Monte Carlo, wspomaganego głęboką siecią neuronową. Rozwiązanie inspirowane jest architekturą AlphaZero, wzbogaconą o współczesne techniki uczenia głębokiego.
 
 Do wytrenowania sieci neuronowej wykorzystano zbiór danych z Lichess Elite Database.
 Zaimplementowana sieć neuronowa wykorzystuje architekturę rezydualną rozszerzoną o bloki Squeeze and Excitation oraz funkcję aktywacji SiLU.
 
 Kolejnym kluczowym aspektem pracy jest zrównoleglenie algorytmu MCTS. W celu efektywnego wykorzystania zasobów GPU oraz CPU zastosowano metodę wieloprocesowego Tree Parallelization w połączeniu z techniką Watch the Unobserved oraz mechanizmem batchowania danych.
 
-Drugim etapem pracy jest implementacja modułu identyfikacji figur na szachownicy z wykorzystaniem analizy obrazu. Wykorzystuje on specjalnie przygotowaną planszę, która jest oznaczona kolorowymi znacznikami w narożnikach. Dodatkowo zaprojektowano specjalne figury umożliwiające ich łatwą detekcję. Zostaną dokładnie omówione etapy przetwarzania obrazu, w tym korekcja perspektywy planszy, klasyfikacja figur wraz z ich lokalizacją.
+Drugim etapem pracy jest implementacja modułu identyfikacji figur na szachownicy z wykorzystaniem analizy obrazu. Wykorzystuje on specjalnie przygotowaną planszę, która jest oznaczona kolorowymi znacznikami w narożnikach. Dodatkowo zaprojektowano specjalne figury umożliwiające ich łatwą detekcję. W pracy zostaną dokładnie omówione etapy przetwarzania obrazu, w tym korekcja perspektywy planszy, klasyfikacja figur wraz z ich lokalizacją.
+
 Moduł detekcji bezpośrednio współpracuje z silnikiem szachowym tworząc kompletny system do gry w szachy na fizycznej planszy.
 
 \hspace{1cm}
 
-\textbf{Słowa kluczowe} – szachy, sieci neuronowe, Monte Carlo Tree Search, wieloprocesowość, WU-UCT, ResNet, Squeeze-and-Excitation, SiLU, batchowanie danych.
+\textbf{Słowa kluczowe} – szachy, sieci neuronowe, Monte Carlo Tree Search, wieloprocesowość, WU-UCT, ResNet, Squeeze-and-Excitation, SiLU, metoda batchowania danych.
 
 \hspace{2cm}
 
 \section*{Abstract of thesis}
 \addcontentsline{toc}{chapter}{Abstract of thesis}
 
-The objective of this thesis is the design and implementation of a parallel chess engine based on the Monte Carlo Tree Search (MCTS) algorithm, augmented by a deep neural network. The solution is inspired by the AlphaZero architecture, enhanced with contemporary deep learning techniques.
+The objective of this thesis is the design and implementation of a parallel chess engine combined with an image analysis module.
 
-The Lichess Elite Database dataset was used to train the neural network. The implemented neural network utilizes a residual architecture extended with Squeeze-and-Excitation blocks and the SiLU activation function.
+The chess algorithm is based on Monte Carlo Tree Search (MCTS), supported by a deep neural network. The solution is inspired by the AlphaZero architecture, enriched with modern deep learning techniques.
+
+The Lichess Elite Database was used to train the network. The implemented neural network utilizes a residual architecture extended with Squeeze-and-Excitation blocks and the SiLU activation function.
 
 Another key aspect of this work is the parallelization of the MCTS algorithm. To efficiently utilize GPU and CPU resources, a multiprocess Tree Parallelization method was applied in conjunction with the "Watch the Unobserved" technique and a data batching mechanism.
 
-The second stage of the work involves the implementation of a module for identifying chess pieces on the board using image analysis. It utilizes a custom-prepared board marked with colored indicators in the corners. Additionally, custom pieces were designed to facilitate easy detection. The stages of image processing, including board perspective correction, as well as piece classification and localization, are discussed in detail.
+The second stage of the work involves the implementation of a chessboard piece identification module using image analysis. It utilizes a specially prepared board marked with colored markers in the corners. Additionally, special pieces were designed to enable easy detection. The thesis discusses the image processing stages in detail, including board perspective correction, as well as piece classification and localization.
 
-The detection module integrates directly with the chess engine, creating a complete system for playing chess on a physical board.
+The detection module interacts directly with the chess engine, creating a complete system for playing chess on a physical board.
 
 \hspace{1cm}
 
-\textbf{Keywords} – chess, neural networks, Monte Carlo Tree Search, multiprocessing, WU-UCT, ResNet, Squeeze-and-Excitation, SiLU, data batching.
+\textbf{Keywords} – chess, neural networks, Monte Carlo Tree Search, multiprocessing, WU-UCT, ResNet, Squeeze-and-Excitation, SiLU, data batching method.
