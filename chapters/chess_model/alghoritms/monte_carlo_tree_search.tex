@@ -9,7 +9,7 @@ Algorytm Monte Carlo Tree Search jest heurystycznym algorytmem przeszukiwania pr
 \begin{figure}[!ht]
 \centering
 \includegraphics[width=0.8\textwidth]{images/mcts_sections.png}
-\caption{Etapy algorytmu Monte Carlo Tree Search. Źródło: GeeksforGeeks, Monte Carlo Tree Search (MCTS) in Machine Learning}
+\caption[Etapy algorytmu Monte Carlo Tree Search]{Etapy algorytmu Monte Carlo Tree Search. Źródło: GeeksforGeeks, Monte Carlo Tree Search (MCTS) in Machine Learning}
 \end{figure}
 
 \newpage
@@ -51,7 +51,7 @@ Wzór ten składa się z sumy dwóch składników. Pierwszy z nich $\widehat{Q}(
 \legend{$\sqrt{\frac{\ln 50}{n(s,a)}}$}
 \end{axis}
 \end{tikzpicture}
-\caption{Składnik eksploracji $\sqrt{\frac{\ln(N(s))}{N(s,a)}}$ dla $N(s)=50$}
+\caption[Składnik eksploracji]{Składnik eksploracji $\sqrt{\frac{\ln(N(s))}{N(s,a)}}$ dla $N(s)=50$}
 \label{fig:uct-exploration}
 \end{figure}
 
@@ -112,7 +112,7 @@ V(s) = P_{win} \cdot 1 + P_{draw} \cdot 0 + P_{loss} \cdot (-1) = P_{win} - P_{l
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.8\textwidth]{images/WDL.png}
-\caption{Wykres rozkładu WDL podczas trwania partii szachowej. Źródło: Leela Chess Zero, Win-Draw-Loss evaluation}
+\caption[Rozkład WDL]{Wykres rozkładu WDL podczas trwania partii szachowej. Źródło: Leela Chess Zero, Win-Draw-Loss evaluation}
 \end{figure}
 
 \newpage

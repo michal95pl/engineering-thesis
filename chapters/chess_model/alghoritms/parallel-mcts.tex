@@ -20,7 +20,7 @@ Można spróbować naiwnie rozwiązać ten problem poprzez blokowanie liści dod
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.8\textwidth]{images/mcts-naive-batch.png}
-\caption{Naiwna metoda batchowania danych. Czerwone strzałki reprezentują wybraną najlepszą ścieżkę. Liść oznaczony numerem 6 został dodany do bufora i jest zablokowany. Na fioletowo została oznaczona ścieżka prowadząca do kolejnego liścia, który zostanie dodany do bufora.}
+\caption[Naiwna metoda batchowania danych]{Naiwna metoda batchowania danych. Czerwone strzałki reprezentują wybraną najlepszą ścieżkę. Liść oznaczony numerem 6 został dodany do bufora i jest zablokowany. Na fioletowo została oznaczona ścieżka prowadząca do kolejnego liścia, który zostanie dodany do bufora.}
 \end{figure}
 
 \section{Fundament idealnego algorytmu równoległego}
@@ -76,7 +76,7 @@ Mechanizm blokowania przedstawiony w podrozdziale 4.1, pełni teraz tylko rolę 
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.8\textwidth]{images/WU-UCT.png}
-\caption{WU-UCT. Czerwona strzałka przedstawia najlepszą ścieżkę, natomiast fioletowa przedstawia ścieżkę do kolejnego liścia dodawanego do bufora}
+\caption[WU-UCT]{WU-UCT. Czerwona strzałka przedstawia najlepszą ścieżkę, natomiast fioletowa przedstawia ścieżkę do kolejnego liścia dodawanego do bufora}
 \end{figure}
 
 \newpage
@@ -165,7 +165,7 @@ Jako optymalną wartość rozmiaru bufora wybrano 2, gdyż daje ona bardzo duży
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.55\textwidth]{images/buffor-comp.png}
-\caption{Rozgrywka między sekwencyjnym MCTS a MCTS z buforem o rozmiarze 2 przy tym samym czasie wykonania. Rozgrywka została oceniona przez silnik Stockfish.}
+\caption[Rozgrywka między sekwencyjnym MCTS a MCTS z buforem o rozmiarze 2]{Rozgrywka między sekwencyjnym MCTS a MCTS z buforem o rozmiarze 2 przy tym samym czasie wykonania. Rozgrywka została oceniona przez silnik Stockfish.}
 \end{figure}
 
 

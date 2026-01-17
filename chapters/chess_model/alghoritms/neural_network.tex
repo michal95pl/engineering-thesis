@@ -38,7 +38,7 @@ Na rysunku 3.2 przedstawiona jest standardowa architektura warstwy rezydualnej. 
 \begin{figure}[!h]
 \centering
 \includegraphics[width=1.0\textwidth]{images/resNet.png}
-\caption{Architektura warstwy rezydualnej. Kolorem niebieskim zaznaczono skip connection.}
+\caption[Architektura warstwy rezydualnej]{Architektura warstwy rezydualnej. Kolorem niebieskim zaznaczono skip connection.}
 \end{figure}
 
 \subsection{Warstwa konwolucyjna}
@@ -88,7 +88,7 @@ gdzie $\mu$ to średnia, $\sigma$ to odchylenie standardowe, a $\epsilon$ to ma�
 \includegraphics[width=0.4\textwidth]{images/przed_norm.png}
 \hspace{0.5cm}
 \includegraphics[width=0.4\textwidth]{images/po_norm.png}
-\caption{Normalizacja. Dane są centrowane i skalowane, dzięki czemu zachowują swój kształt, lecz zmieniają zakres wartości.}
+\caption[Normalizacja]{Normalizacja. Dane są centrowane i skalowane, dzięki czemu zachowują swój kształt, lecz zmieniają zakres wartości.}
 \end{figure}
 
 Poniższe wzory prezentują mechanizm wstecznej propagacji błędu w opisanej wyżej prostej sieci. Ukazują one źródło problemu z niestabilnością gradientu oraz sposób, w jaki normalizacja batchowa go rozwiązuje. We wzorze 3.4 przedstawiony jest wzór na gradient w warstwie $n$ po wykonaniu różniczki wzoru 3.3. Składa się on z trzech czynników: pochodnej funkcji błędu, błędu z warstw wyższych oraz wyjścia z warstwy poprzedniej ($h_{n-1}$). To właśnie ten ostatni człon jest kluczowy. We wzorze 3.5 można zauważyć, że sygnał wejściowy $h_{n-1}$ zależy od iloczynu wag warstw poprzednich. W rezultacie, w sieci bez wykonywania normalizacji, może dojść do eksplozji lub zaniku gradientu, gdy wagi są odpowiednio duże lub małe.
@@ -139,13 +139,13 @@ Porównując wykresy loss dla modeli z oraz bez bloków SE, można zauważyć r�
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.9\textwidth]{images/bez-se.png}
-\caption{Wykres loss dla modelu bez bloków SE. Wykres przedstawia co drugą epokę.}
+\caption[Wykres loss dla modelu bez bloków SE]{Wykres loss dla modelu bez bloków SE. Wykres przedstawia co drugą epokę.}
 \end{figure}
 
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.9\textwidth]{images/nomal-model.png}
-\caption{Wykres loss dla modelu z blokami SE. Wykres przedstawia co drugą epokę.}
+\caption[Wykres loss dla modelu z blokami SE]{Wykres loss dla modelu z blokami SE. Wykres przedstawia co drugą epokę.}
 \end{figure}
 
 \newpage
@@ -169,7 +169,7 @@ W tym punkcie pochodna funkcji przyjmuje wartość zerową. W rezultacie dla war
 \begin{figure}[h]
 \centering
 \includegraphics[width=1\textwidth]{images/SiLu.png}
-\caption{Po lewej porównanie SiLu oraz ReLu. Po prawej pochodna SiLu (dSiLu) oraz funkcja sigmoidalna. Źródło: \cite{SiLu}}
+\caption[Funkcja aktywacji SiLu oraz ReLu]{Po lewej porównanie SiLu oraz ReLu. Po prawej pochodna SiLu (dSiLu) oraz funkcja sigmoidalna. Źródło: \cite{SiLu}}
 \end{figure}
 
 \hspace{0.5cm}
@@ -179,13 +179,13 @@ Bardzo znaczącą różnicę między SiLu, a ReLu widać przede wszystkim na wyk
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.9\textwidth]{images/ReLU-model.png}
-\caption{Wykres loss dla modelu z funkcją ReLu. Wykres przedstawia co drugą epokę.}
+\caption[Wykres loss dla modelu z funkcją ReLu]{Wykres loss dla modelu z funkcją ReLu. Wykres przedstawia co drugą epokę.}
 \end{figure}
 
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.9\textwidth]{images/nomal-model.png}
-\caption{Wykres loss dla modelu z funkcją SiLu. Wykres przedstawia co drugą epokę.}
+\caption[Wykres loss dla modelu z funkcją SiLu]{Wykres loss dla modelu z funkcją SiLu. Wykres przedstawia co drugą epokę.}
 \end{figure}
 
 \newpage
@@ -217,13 +217,13 @@ Celem trenowania sieci neuronowej jest minimalizacja funkcji straty, która skł
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.9\textwidth]{images/x3-net.png}
-\caption{Funkcja loss ze współczynnikiem 3. Wykres przedstawia co drugą epokę.}
+\caption[Funkcja loss ze współczynnikiem 3]{Funkcja loss ze współczynnikiem 3. Wykres przedstawia co drugą epokę}
 \end{figure}
 
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.9\textwidth]{images/x4-net.png}
-\caption{Funkcja loss ze współczynnikiem 4. Wykres przedstawia co drugą epokę.}
+\caption[Funkcja loss ze współczynnikiem 4]{Funkcja loss ze współczynnikiem 4. Wykres przedstawia co drugą epokę}
 \end{figure}
 
 
@@ -242,7 +242,7 @@ Należy też zauważyć, że procesy działają niezależnie oraz równolegle. W
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.9\textwidth]{images/data-loader.png}
-\caption{Struktura działania procesu ładowania danych.}
+\caption{Struktura działania procesu ładowania danych}
 \end{figure}
 
 \section{Ewaluacja modelu}
@@ -265,13 +265,13 @@ Wykres dokładności top-10 dla głowicy policy, pokazuje że głowica policy ba
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.9\textwidth]{images/nomal-model.png}
-\caption{Wykres loss dla końcowego modelu. Wykres przedstawia co drugą epokę.}
+\caption[Wykres loss dla końcowego modelu]{Wykres loss dla końcowego modelu. Wykres przedstawia co drugą epokę}
 \end{figure}
 
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.9\textwidth]{images/7_res_block_net.png}
-\caption{Wykres loss dla modelu z 7 blokami rezydualnymi. Wykres przedstawia co drugą epokę.}
+\caption[Wykres loss dla modelu z 7 blokami rezydualnymi]{Wykres loss dla modelu z 7 blokami rezydualnymi. Wykres przedstawia co drugą epokę}
 \end{figure}
 
 \newpage
@@ -279,13 +279,13 @@ Wykres dokładności top-10 dla głowicy policy, pokazuje że głowica policy ba
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.8\textwidth]{images/confusion-matrix.png}
-\caption{Macierz pomyłek dla głowicy value.}
+\caption{Macierz pomyłek dla głowicy value}
 \end{figure}
 
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.7\textwidth]{images/top-k-acc.png}
-\caption{Wykres dokładności top-10 dla głowicy policy.}
+\caption{Wykres dokładności top-10 dla głowicy policy}
 \end{figure}
 
 \newpage
