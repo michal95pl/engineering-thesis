@@ -73,22 +73,22 @@ Dzięki zastosowaniu metody \texttt{after()} w bibliotece \texttt{tkinter}, wido
 \section{Logika sterowania i etapy inicjalizacji}
 Aplikacja działa w oparciu o sekwencyjny model inicjalizacji, który zapewnia, że moduły wizyjne i komunikacyjne otrzymają poprawne parametry wejściowe przed rozpoczęciem właściwej rozgrywki. Proces ten można podzielić na następujące fazy:
 
-\subsection{Uruchomienie i wybór urządzenia (Startup)}
-Po uruchomieniu modułu \texttt{main.py} następuje resetowanie logów oraz próba nawiązania połączenia z serwerem silnika szachowego za pomocą klasy \texttt{Communication}. Jeśli połączenie zostanie nawiązane, wyświetlane jest okno \texttt{CameraSelectPage}. Program skanuje systemowe indeksy urządzeń (0--3), a użytkownik z listy rozwijanej wybiera kamerę, która ma służyć do monitorowania szachownicy.
+\subsection{Uruchomienie i wybór urządzenia}
+Po uruchomieniu modułu \texttt{main.py} następuje resetowanie logów oraz próba nawiązania połączenia z serwerem silnika szachowego za pomocą klasy \texttt{Communication}. Jeśli połączenie zostanie nawiązane, wyświetlane jest okno \texttt{CameraSelectPage}. Program skanuje systemowe indeksy urządzeń, a użytkownik z listy rozwijanej wybiera kamerę, która ma służyć do monitorowania szachownicy.
 
 \subsection{Kalibracja markerów i perspektywy}
-Po wyborze kamery wywoływany jest \textit{listener}, który niszczy interfejs wyboru i inicjalizuje \texttt{ColorCalibrationPage}. Na tym etapie:
+Po wyborze kamery wywoływany jest \textit{listener}, który usuwa interfejs wyboru i inicjalizuje \texttt{ColorCalibrationPage}. Na tym etapie:
 \begin{enumerate}
     \item Wyświetlany jest podgląd wideo na żywo.
     \item Użytkownik wskazuje kursorem myszy zielone i czerwone znaczniki na rogach szachownicy.
     \item System pobiera wartości RGB klikniętych pikseli, które posłużą klasie \texttt{BoardTransformation} do progowania i ekstrakcji narożników szachownicy.
-    \item Po zatwierdzeniu wyboru przyciskiem „Ok”, parametry koloru są przekazywane dalej do głównego modułu gry.
+    \item Po zatwierdzeniu wyboru, parametry koloru są przekazywane dalej do głównego modułu gry.
 \end{enumerate}
 
-
+\newpage
 
 \subsection{Pętla gry i komunikacja z silnikiem}
-Właściwa logika gry odbywa się wewnątrz klasy \texttt{VideoFrame}, pracującej jako osobny wątek. Przepływ danych w jednej iteracji pętli wygląda następująco:
+Właściwa logika gry odbywa się wewnątrz klasy \texttt{VideoFrame}. Przepływ danych w jednej iteracji pętli wygląda następująco:
 \begin{itemize}
     \item \textbf{Przetwarzanie obrazu:} Pobranie klatki $\rightarrow$ Transformacja perspektywiczna $\rightarrow$ Identyfikacja bierek za pomocą \texttt{ChessCNN}.
     \item \textbf{Zapis stanu:} Wykryta tablica (lista 8x8) jest przekazywana do \texttt{JsonUpdater}, który konwertuje ją na notację FEN i zapisuje w pliku \texttt{data.json}.
