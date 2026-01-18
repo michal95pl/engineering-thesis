@@ -1,7 +1,8 @@
 \setcounter{chapter}{9}
+\addtocontents{toc}{\protect\newpage}
 \chapter[Graficzny interfejs użytkownika {[\textit{Marcin Ziółkowski}]}]{Graficzny interfejs użytkownika}
 
-Interfejs graficzny (GUI) systemu został zaprojektowany w celu zapewnienia intuicyjnej obsługi procesu kalibracji oraz wizualizacji stanu gry w czasie rzeczywistym. Aplikacja została zrealizowana w języku Python z wykorzystaniem biblioteki \texttt{tkinter}, a jej architektura opiera się na modelu maszyn stanowych, gdzie użytkownik przechodzi przez kolejne etapy konfiguracji.
+Interfejs graficzny systemu został zaprojektowany w celu zapewnienia intuicyjnej obsługi procesu kalibracji oraz wizualizacji stanu gry w czasie rzeczywistym. Aplikacja została zrealizowana w języku Python z wykorzystaniem biblioteki \texttt{tkinter}.
 
 \section{Architektura i przepływ aplikacji}
 Główny punkt wejścia aplikacji, zdefiniowany w pliku \texttt{main.py}, zarządza cyklem życia okien i logiką przełączania stron. Wykorzystano mechanizm \textit{listenerów}, który pozwala na niszczenie poprzednich widoków i inicjalizację nowych po spełnieniu określonych warunków (np. wybraniu kamery).
@@ -20,10 +21,10 @@ Proces uruchomienia systemu przebiega w trzech krokach:
 Klasa \texttt{CameraSelectPage} odpowiada za skanowanie portów systemowych w poszukiwaniu dostępnych urządzeń wideo. Metoda statyczna \texttt{get\_available\_cameras} próbuje otworzyć strumień \texttt{cv2.VideoCapture} dla kolejnych indeksów, co eliminuje błędy wyboru nieistniejących urządzeń.
 
 \subsection{Kalibracja markerów (ColorCalibrationPage)}
-Po wyborze kamery, system przechodzi do widoku \texttt{ColorCalibrationPage}. Jest to kluczowy etap dla modułu \texttt{BoardTransformation}. Użytkownik, klikając na podgląd wideo, wybiera próbki kolorów dla zielonych i czerwonych znaczników umieszczonych na rogach szachownicy. Wybrane wartości RGB są wizualizowane za pomocą obiektów \texttt{create\_oval} na płótnie \texttt{canvas}, co daje natychmiastową informację zwrotną o poprawności wyboru.
+Po wyborze kamery, system przechodzi do widoku \texttt{ColorCalibrationPage}. Jest to kluczowy etap dla modułu \texttt{BoardTransformation}. Użytkownik, klikając na podgląd wideo, wybiera próbki kolorów dla zielonych i czerwonych znaczników umieszczonych na rogach szachownicy. Wybrane wartości RGB są wizualizowane, co daje natychmiastową informację zwrotną o poprawności wyboru.
 
 \section{Integracja obrazu wideo (VideoFrame)}
-Najbardziej złożonym elementem GUI jest klasa \texttt{VideoFrame}, która dziedziczy po \texttt{threading.Thread}. Dzięki pracy w osobnym wątku, intensywne obliczenia związane z przetwarzaniem obrazu i inferencją sieci neuronowej nie blokują głównej pętli zdarzeń interfejsu (UI).
+Najbardziej złożonym elementem GUI jest klasa \texttt{VideoFrame}, która dziedziczy po \texttt{threading.Thread}. Dzięki pracy w osobnym wątku, obliczenia związane z przetwarzaniem obrazu i sieci neuronowej nie blokują głównej pętli zdarzeń interfejsu.
 
 \begin{lstlisting}[style=codeListingStyle, caption={Integracja OpenCV z Tkinter w osobnym wątku}]
 def run(self):
@@ -70,4 +71,4 @@ Dzięki zastosowaniu metody \texttt{after()} w bibliotece \texttt{tkinter}, wido
 \end{figure}
 
 \section{Komunikacja i logowanie zdarzeń}
-System GUI integruje się również z modułem \texttt{Communication}, który przesyła aktualny stan FEN do zewnętrznego serwera analizy. Wszystkie kluczowe zdarzenia, takie jak błędy połączenia, timeouty serwera czy wykryte ruchy, są rejestrowane przez klasę \texttt{Logger} i zapisywane w pliku dziennika, co ułatwia diagnostykę systemu.
+System GUI integruje się również z modułem \texttt{Communication}, który przesyła aktualny stan FEN do serwera z opisywanym silnikiem szachowym. Wszystkie kluczowe zdarzenia, takie jak błędy połączenia, timeouty serwera czy wykryte ruchy, są rejestrowane przez klasę \texttt{Logger} i zapisywane w pliku dziennika, co ułatwia diagnostykę systemu.

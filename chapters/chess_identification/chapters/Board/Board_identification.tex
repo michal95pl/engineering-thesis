@@ -19,6 +19,8 @@ Ze względu na zmienne warunki oświetleniowe oraz cienie rzucane przez figury, 
     T = \frac{mode_{dark} + mode_{bright}}{2}
 \end{equation}
 
+\newpage
+
 Poniżej przedstawiono implementację funkcji wyznaczającej próg na podstawie histogramu:
 
 \begin{lstlisting}[style=codeListingStyle, caption={Analiza bimodalna histogramu do wyznaczenia progu}]
@@ -32,10 +34,8 @@ def hist_modification(hist):
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.9\textwidth]{chapters/chess_identification/images/Binary_treshold.png}
-\caption{Wykres ilustrujący lokalne progowanie adaptacyjne dla pola szachownicy}
+\caption[lokalne progowanie adaptacyjne dla pola szachownicy]{Wykres ilustrujący lokalne progowanie adaptacyjne dla pola szachownicy}
 \end{figure}
-
-\newpage
 
 \section{Ekstrakcja obiektu i Ellipse Crop}
 Klasa \texttt{EllipseCrop} realizuje autorską metodę kadrowania opartego na detekcji elipsy podstawy figury. Proces ten ma na celu ujednolicenie danych wejściowych dla sieci neuronowej poprzez usunięcie tła pola szachownicy. Poniżej przedstawiono siedem kluczowych etapów przetwarzania obrazu w tej fazie:
@@ -150,6 +150,8 @@ Ostatnim etapem jest przekazanie zakodowanej tablicy do klasy \texttt{JsonUpdate
 \subsection{Konwersja na obiekty szachowe}
 Metoda \texttt{convert\_chessBoard} w klasie \texttt{JsonUpdater} przyjmuje tablicę z jednoznakowymi identyfikatorami. Dzięki temu proces tworzenia obiektu \texttt{chess.Piece} jest uproszczony do bezpośredniego odczytu z mapy symboli.
 
+\newpage
+
 \begin{lstlisting}[style=codeListingStyle, caption={Konwersja identyfikatorow na obiekty biblioteki python-chess}]
 def convert_chessBoard(self, newlist):
     board = chess.Board(None)
@@ -178,4 +180,4 @@ def convert_chessBoard(self, newlist):
 \end{lstlisting}
 
 \subsection{Walidacja i zapis FEN}
-Przed zapisaniem stanu do pliku \texttt{data.json}, \texttt{JsonUpdater} weryfikuje poprawność przejścia (funkcja \texttt{is\_transition\_possible}). Sprawdzane jest, czy wykryty stan wynika z dozwolonego ruchu, co pozwala wyeliminować błędy spowodowane chwilowym przesłonięciem szachownicy przez rękę gracza. Finalny stan gry zapisywany jest w formacie FEN, co umożliwia natychmiastową analizę przez doradcę AI.
+Przed zapisaniem stanu do pliku \texttt{data.json}, \texttt{JsonUpdater} weryfikuje poprawność przejścia (funkcja \texttt{is\_transition\_possible}). Sprawdzane jest, czy wykryty stan wynika z dozwolonego ruchu, co pozwala wyeliminować błędy spowodowane chwilowym przesłonięciem szachownicy przez rękę gracza. Finalny stan gry zapisywany jest w formacie FEN.

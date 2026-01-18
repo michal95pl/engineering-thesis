@@ -121,7 +121,7 @@ Należy jednak zauważyć, że po znormalizowaniu wyjścia z warstwy, sieć moż
 \newpage
 
 \section{Squeeze and Excitation} 
-Kolejnym elementem widocznym na diagramie 4.1 są bloki \textit{Squeeze and Excitation}. Bardzo podobne rozwiązanie zostało zastosowane w LeelaChessZero. {\cite{lc0_nn}} Ich zadaniem jest adaptacyjna rekalibracja kanałów cech na wyjściu z warstwy konwolucyjnej. Dzięki temu niwelują one ograniczenia splotu, który analizuje jedynie lokalne wzorce traktując zależności między kanałami w sposób niejawny \cite{SqueezeAndExcitation}. Ograniczenie to wynika przede wszystkim z użycia niewielkiego filtra, który operuje na małym fragmencie wejścia, a następnie sumuje wyniki ze wszystkich kanałów.
+Kolejnym elementem widocznym na diagramie 4.1 są bloki \textit{Squeeze and Excitation}. Bardzo podobne rozwiązanie zostało zastosowane w LeelaChessZero {\cite{lc0_nn}}. Ich zadaniem jest adaptacyjna rekalibracja kanałów cech na wyjściu z warstwy konwolucyjnej. Dzięki temu niwelują one ograniczenia splotu, który analizuje jedynie lokalne wzorce traktując zależności między kanałami w sposób niejawny \cite{SqueezeAndExcitation}. Ograniczenie to wynika przede wszystkim z użycia niewielkiego filtra, który operuje na małym fragmencie wejścia, a następnie sumuje wyniki ze wszystkich kanałów.
 
 W celu poprawienia reprezentacji cech, blok \textit{Squeeze and Excitation} składa się z dwóch etapów: \textit{Squeeze} oraz \textit{Excitation}. Pierwszy z nich ma na celu stworzenie deskryptora globalnych cech dla każdego kanału. Jest to osiągnięte poprzez zastosowanie globalnego uśredniania, które redukuje wymiary każdego z kanałów do pojedynczej wartości.
 
