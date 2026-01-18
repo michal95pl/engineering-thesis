@@ -44,31 +44,37 @@ def duplicate(square, filename, a, b, steps_r=24, steps_d=12):
 Dla każdego wyciętego pola wygenerowano 24 warianty obrócone o kąt co 15 stopni. Dzięki temu model uczy się cech niezmienniczych względem rotacji, co jest kluczowe w systemie, gdzie kamera może być zamontowana pod dowolnym kątem względem graczy.
 
 \section{Charakterystyka zbioru danych}
-Finalny zbiór danych składa się z tysięcy próbek podzielonych na 6 klas odpowiadających typom bierek. Podział danych na zbiór treningowy i walidacyjny został dokonany w stosunku 80/20. Dzięki zastosowaniu znormalizowanych tokenów oraz procedury \texttt{EllipseCrop}, uzyskano bardzo wysoką czystość danych wejściowych (ang. \textit{data purity}), co pozwoliło modelowi \texttt{ChessCNN} osiągnąć wysoką celność klasyfikacji już po kilkunastu epokach uczenia.
+Finalny zbiór danych składa się z 6992 próbek podzielonych na 6 klas odpowiadających typom bierek. Podział danych na zbiór treningowy i walidacyjny został dokonany w stosunku 80/20. Dzięki zastosowaniu znormalizowanych tokenów oraz procedury \texttt{EllipseCrop}, uzyskano bardzo wysoką czystość danych wejściowych (ang. \textit{data purity}), co pozwoliło modelowi \texttt{ChessCNN} osiągnąć wysoką celność klasyfikacji już po kilkunastu epokach uczenia.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.2\textwidth]{chapters/chess_identification/images/Train_material/B4_0_2.png}
+\caption{Wieża nr. 1}
+\end{figure}
 
 \begin{figure}[H]
     \centering
     \begin{minipage}{0.2\textwidth}
         \centering
         \includegraphics[width=\textwidth]{chapters/chess_identification/images/Train_material/Board4_0_2.png}
-        \caption{Wieża nr. 1}
+        \caption{Wieża nr. 1.1}
     \end{minipage}
     \hfill
     \begin{minipage}{0.2\textwidth}
         \centering
         \includegraphics[width=\textwidth]{chapters/chess_identification/images/Train_material/Board4_0_5.png}
-        \caption{Wieża nr. 2}
+        \caption{Wieża nr. 2.1}
     \end{minipage}
     \hfill
     \begin{minipage}{0.2\textwidth}
         \centering
         \includegraphics[width=\textwidth]{chapters/chess_identification/images/Train_material/Board4_7_2.png}
-        \caption{Wieża nr. 3}
+        \caption{Wieża nr. 3.1}
     \end{minipage}
     \hfill
     \begin{minipage}{0.2\textwidth}
         \centering
         \includegraphics[width=\textwidth]{chapters/chess_identification/images/Train_material/Board4_7_5.png}
-        \caption{Wieża nr. 4}
+        \caption{Wieża nr. 4.1}
     \end{minipage}
 \end{figure}
