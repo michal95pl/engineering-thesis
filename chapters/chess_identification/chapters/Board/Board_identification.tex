@@ -7,7 +7,7 @@ Po dokonaniu transformacji perspektywicznej szachownicy, system przystępuje do 
 Lokalizacja bierek w systemie realizowana jest dwuetapowo, co zapewnia wysoką odporność na niedokładności mechaniczne oraz błędy w orientacji tokenów.
 
 \subsection{Lokalizacja siatkowa (Grid-based Localization)}
-Pierwszym stopniem lokalizacji jest podział zrektyfikowanego obrazu szachownicy na regularną siatkę $8 \times 8$. Dzięki wcześniejszej transformacji perspektywicznej, każde z 64 pól posiada stałe współrzędne relatywne. System iteracyjnie wycina fragmenty obrazu odpowiadające poszczególnym polom, co stanowi wstępną lokalizację obiektu w strukturze szachownicy.
+Pierwszym stopniem lokalizacji jest podział obrazu szachownicy na regularną siatkę $8 \times 8$. Dzięki wcześniejszej transformacji perspektywicznej, każde z 64 pól posiada stałe współrzędne relatywne. Następnie system iteracyjnie wycina fragmenty obrazu odpowiadające poszczególnym polom, tworząc zestaw obrazów wejściowych dla dalszej analizy.
 
 \subsection{Lokalizacja wewnątrz pola i detekcja obecności}
 Wewnątrz każdego wyciętego pola klasa \texttt{EllipseCrop} przeprowadza precyzyjną lokalizację obiektu. Wykorzystanie funkcji \texttt{cv2.fitEllipse} pozwala na wyznaczenie środka ciężkości bierki. Jeśli algorytm nie odnajdzie konturów spełniających kryteria rozmiarowe (funkcja \texttt{find}), pole klasyfikowane jest jako puste. Zapobiega to błędnym predykcjom sieci CNN dla szumu tła lub cieni.
