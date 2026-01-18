@@ -1,7 +1,7 @@
 \setcounter{chapter}{8}
 \chapter[Modele bierek i przygotowanie danych uczących {[\textit{Marcin Ziółkowski}]}]{Modele bierek i przygotowanie danych uczących}
 
-Kluczowym elementem sukcesu klasyfikacji obrazu jest wysoka jakość oraz reprezentatywność zbioru danych treningowych. W niniejszym rozdziale opisano autorskie podejście do fizycznego modelowania bierek oraz proces budowy bazy danych obrazowych wykorzystanych do trenowania sieci splotowej \texttt{ChessCNN}.
+Kluczowym elementem klasyfikacji obrazu jest wysoka jakość oraz reprezentatywność zbioru danych treningowych. W niniejszym rozdziale opisano autorskie podejście do fizycznego modelowania bierek oraz proces budowy zbioru danych obrazowych wykorzystanych do trenowania sieci splotowej \texttt{ChessCNN}.
 
 \section{Specyfikacja fizycznych tokenów bierek}
 W projekcie zdecydowano się na odejście od klasycznych, trójwymiarowych figur szachowych na rzecz autorskich tokenów w formie płaskich krążków (piktogramów). Wybór ten podyktowany był chęcią eliminacji problemu okluzji (zasłaniania pól przez wysokie figury) oraz uproszczeniem procesu ekstrakcji cech.
@@ -9,7 +9,7 @@ W projekcie zdecydowano się na odejście od klasycznych, trójwymiarowych figur
 
 
 \subsection{Konstrukcja wizualna i kolorystyka}
-Tokeny zostały zaprojektowane jako dwukolorowe układy o wysokim kontraście, wydrukowane w technologii druku 3D. Każdy krążek posiada charakterystyczną strukturę warstwową:
+Tokeny zostały zaprojektowane jako dwukolorowe układy o wysokim kontraście, wydrukowane przy pomocy drukarki 3D. Każdy krążek posiada charakterystyczną strukturę warstwową:
 \begin{itemize}
     \item \textbf{Symbol bierki:} Centralnie umieszczony piktogram (np. wieża, pion) w kolorze przypisanym do danej strony (biały lub czarny).
     \item \textbf{Tło piktogramu:} Wypełnienie wnętrza krążka kolorem kontrastowym względem symbolu (np. czarne tło dla białego symbolu).
@@ -19,10 +19,10 @@ Tokeny zostały zaprojektowane jako dwukolorowe układy o wysokim kontraście, w
 Takie podejście rozwiązuje problem "zlewania się" bierki z polem szachownicy. Dzięki zastosowaniu obwódki i tła o przeciwnych barwach, algorytm \texttt{EllipseCrop} jest w stanie precyzyjnie wyznaczyć krawędzie elipsy i wycentrować obiekt nawet w sytuacji, gdy jasność pola szachownicy jest identyczna z kolorem samej figury (np. czarny token na czarnym polu).
 
 \section{Akwizycja danych treningowych}
-Zbiór danych został wygenerowany w sposób półautomatyczny przy użyciu skryptu \texttt{setup\_learning\_pieces.py}. Jako bazę wykorzystano zdjęcia rzeczywistej planszy z rozstawionymi tokenami, wykonane w różnych warunkach oświetleniowych.
+Zbiór danych został wygenerowany przy użyciu skryptu \texttt{setup\_learning\_pieces.py}. Jako bazę wykorzystano zdjęcia rzeczywistej planszy z rozstawionymi tokenami, wykonane w różnych warunkach oświetleniowych.
 
 \subsection{Segmentacja i ekstrakcja}
-Proces budowy bazy danych przebiegał według następującego algorytmu:
+Proces tworzenia zbioru danych przebiegał według następującego algorytmu:
 \begin{enumerate}
     \item Wykrycie siatki szachownicy i transformacja perspektywiczna całego obrazu.
     \item Podział obrazu na 64 pola i przypisanie im etykiet na podstawie wzorcowego rozstawienia bierek (metoda \texttt{seperate}).
@@ -30,7 +30,7 @@ Proces budowy bazy danych przebiegał według następującego algorytmu:
 \end{enumerate}
 
 \section{Augmentacja danych (Data Augmentation)}
-Z uwagi na to, że sieć neuronowa musi być odporna na niedokładne ułożenie tokenów przez gracza (przesunięcia, rotacje), zastosowano agresywną metodę augmentacji syntetycznej w funkcji \texttt{duplicate}.
+Z uwagi na to, że sieć neuronowa musi być odporna na niedokładne ułożenie tokenów przez gracza (przesunięcia, rotacje), zastosowano metodę augmentacji w funkcji \texttt{duplicate}.
 
 \begin{lstlisting}[style=codeListingStyle, caption={Fragment skryptu generującego warianty treningowe poprzez rotację}]
 def duplicate(square, filename, a, b, steps_r=24, steps_d=12):
@@ -44,37 +44,33 @@ def duplicate(square, filename, a, b, steps_r=24, steps_d=12):
 Dla każdego wyciętego pola wygenerowano 24 warianty obrócone o kąt co 15 stopni. Dzięki temu model uczy się cech niezmienniczych względem rotacji, co jest kluczowe w systemie, gdzie kamera może być zamontowana pod dowolnym kątem względem graczy.
 
 \section{Charakterystyka zbioru danych}
-Finalny zbiór danych składa się z 6992 próbek podzielonych na 6 klas odpowiadających typom bierek. Podział danych na zbiór treningowy i walidacyjny został dokonany w stosunku 80/20. Dzięki zastosowaniu znormalizowanych tokenów oraz procedury \texttt{EllipseCrop}, uzyskano bardzo wysoką czystość danych wejściowych (ang. \textit{data purity}), co pozwoliło modelowi \texttt{ChessCNN} osiągnąć wysoką celność klasyfikacji już po kilkunastu epokach uczenia.
+Końcowy zbiór danych składa się z 6992 próbek podzielonych na 6 klas odpowiadających typom bierek. Podział danych na zbiór treningowy i walidacyjny został dokonany w stosunku 80/20. Dzięki zastosowaniu znormalizowanych tokenów oraz procedury \texttt{EllipseCrop}, uzyskano bardzo wysoką czystość danych wejściowych, co pozwoliło modelowi \texttt{ChessCNN} osiągnąć wysoką celność klasyfikacji już po kilkunastu epokach uczenia. 
 
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.2\textwidth]{chapters/chess_identification/images/Train_material/B4_0_2.png}
-\caption{Wieża nr. 1}
-\end{figure}
+Poniżej przedstawiono przykładowe obrazy tokenów:
 
 \begin{figure}[H]
     \centering
     \begin{minipage}{0.2\textwidth}
         \centering
         \includegraphics[width=\textwidth]{chapters/chess_identification/images/Train_material/Board4_0_2.png}
-        \caption{Wieża nr. 1.1}
+        \caption{Wieża nr. 1}
     \end{minipage}
     \hfill
     \begin{minipage}{0.2\textwidth}
         \centering
         \includegraphics[width=\textwidth]{chapters/chess_identification/images/Train_material/Board4_0_5.png}
-        \caption{Wieża nr. 2.1}
+        \caption{Wieża nr. 2}
     \end{minipage}
     \hfill
     \begin{minipage}{0.2\textwidth}
         \centering
         \includegraphics[width=\textwidth]{chapters/chess_identification/images/Train_material/Board4_7_2.png}
-        \caption{Wieża nr. 3.1}
+        \caption{Wieża nr. 3}
     \end{minipage}
     \hfill
     \begin{minipage}{0.2\textwidth}
         \centering
         \includegraphics[width=\textwidth]{chapters/chess_identification/images/Train_material/Board4_7_5.png}
-        \caption{Wieża nr. 4.1}
+        \caption{Wieża nr. 4}
     \end{minipage}
 \end{figure}
