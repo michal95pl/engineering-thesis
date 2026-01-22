@@ -1,16 +1,16 @@
 \setcounter{chapter}{6}
-\chapter[Identyfikacja i lokalizacja bierek {[\textit{Marcin Ziółkowski}]}]{Identyfikacja i lokalizacja bierek}
+\chapter[Identyfikacja i lokalizacja figur szachowych {[\textit{Marcin Ziółkowski}]}]{Identyfikacja i lokalizacja figur szachowych}
 
 Po dokonaniu transformacji perspektywicznej szachownicy, system przystępuje do kluczowej fazy określenia stanu gry. Proces ten łączy techniki klasycznego przetwarzania obrazu z głębokim uczeniem maszynowym i składa się z trzech głównych filarów: precyzyjnej lokalizacji obiektów, identyfikacji ich typu oraz koloru, a także finalnej konwersji danych do formatu FEN za pomocą modułu walidacyjnego.
 
-\section{Metodyka lokalizacji bierek}
-Lokalizacja bierek w systemie realizowana jest dwuetapowo, co zapewnia wysoką odporność na niedokładności mechaniczne oraz błędy w orientacji tokenów.
+\section{Metodyka lokalizacji figur szachowych}
+Lokalizacja figur szachowych w systemie realizowana jest dwuetapowo, co zapewnia wysoką odporność na niedokładności mechaniczne oraz błędy w orientacji tokenów.
 
 \subsection{Lokalizacja siatkowa (Grid-based Localization)}
 Pierwszym stopniem lokalizacji jest podział obrazu szachownicy na regularną siatkę $8 \times 8$. Dzięki wcześniejszej transformacji perspektywicznej, każde z 64 pól posiada stałe współrzędne relatywne. Następnie system iteracyjnie wycina fragmenty obrazu odpowiadające poszczególnym polom, tworząc zestaw obrazów wejściowych dla dalszej analizy.
 
 \subsection{Lokalizacja wewnątrz pola i detekcja obecności}
-Wewnątrz każdego wyciętego pola klasa \texttt{EllipseCrop} przeprowadza precyzyjną lokalizację obiektu. Wykorzystanie funkcji \texttt{cv2.fitEllipse} pozwala na wyznaczenie środka ciężkości bierki. Jeśli algorytm nie odnajdzie konturów spełniających kryteria rozmiarowe (funkcja \texttt{find}), pole klasyfikowane jest jako puste. Zapobiega to błędnym predykcjom sieci CNN dla szumu tła lub cieni.
+Wewnątrz każdego wyciętego pola klasa \texttt{EllipseCrop} przeprowadza precyzyjną lokalizację obiektu. Wykorzystanie funkcji \texttt{cv2.fitEllipse} pozwala na wyznaczenie środka ciężkości figury szachowej. Jeśli algorytm nie odnajdzie konturów spełniających kryteria rozmiarowe (funkcja \texttt{find}), pole klasyfikowane jest jako puste. Zapobiega to błędnym predykcjom sieci CNN dla szumu tła lub cieni.
 
 \section{Lokalne progowanie adaptacyjne}
 Ze względu na zmienne warunki oświetleniowe oraz cienie rzucane przez figury, zastosowanie globalnego progu binaryzacji okazało się niewystarczające. Algorytm wyznacza progi na podstawie analizy bimodalnej histogramu intensywności pikseli dla każdego pola z osobna.
@@ -47,7 +47,7 @@ Klasa \texttt{EllipseCrop} realizuje autorską metodę kadrowania opartego na de
     \item \textbf{Wizualizacja detekcji (Ellipse):} Dopasowanie elipsy do największego konturu (\texttt{cv2.fitEllipse}).
     \item \textbf{Maska binarna (Mask):} Wygenerowanie maski wypełniającej wnętrze elipsy.
     \item \textbf{Segmentacja (Masked):} Wycięcie obiektu z tła (\texttt{bitwise\_and}).
-    \item \textbf{Normalizacja rozmiaru (Cropped):} Przeskalowanie obiektu do formatu $30 \times 30$ pikseli.
+    \item \textbf{Normalizacja rozmiaru (Cropped):} Przeskalowanie obiektu.
 \end{enumerate}
 
 \begin{figure}[H]
@@ -102,31 +102,57 @@ Klasa \texttt{EllipseCrop} realizuje autorską metodę kadrowania opartego na de
 Poniższy fragment kodu prezentuje główną logikę składania tych etapów:
 
 \begin{lstlisting}[style=codeListingStyle, caption={Zarządzanie potokiem przetwarzania Ellipse Crop}]
-def apply(self, img, thr, bright_node, dark_node, step_visualize=None):
-    self.step_visualize = step_visualize
+def apply(self, img, thr, bright_node, dark_node, step_visualize=False):
     H, W = img.shape[:2]
     vis = img.copy()
 
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    _, img = cv2.threshold(gray, thr, 255, cv2.THRESH_BINARY)
     best_ellipse = self.detect_ellipse(vis, thr, bright_node, dark_node, step_visualize=step_visualize)
 
-    mask = np.zeros((H, W), dtype=np.uint8)
-    cv2.ellipse(mask, best_ellipse, 255, -1)
+    if best_ellipse is None:
+        cx, cy = W // 2, H // 2
+        r = min(W, H) // 2
+        best_ellipse = ((cx, cy), (2*r, 2*r), 0)
 
+    (cx, cy), (w, h), angle = best_ellipse
+    w_scaled = w * self.scale
+    h_scaled = h * self.scale
+    best_ellipse_scaled = ((cx, cy), (w_scaled, h_scaled), angle)
+    mask = np.zeros((H, W), dtype=np.uint8)
+
+    if w > 0 and h > 0:
+        cv2.ellipse(mask, best_ellipse_scaled, 255, -1)
+    else:
+        r = min(W, H) // 2
+        cv2.circle(mask, (W // 2, H // 2), r, 255, -1)
+
+    self._show("Mask5", mask)
     masked = cv2.bitwise_and(img, img, mask=mask)
-    self._show("Masked_Final6", masked)
-    
-    resized = cv2.resize(masked, (30, 30))
-    self._show("Resized7", resized)
-    return resized
+    self._show("Masked6", masked)
+
+    w2, h2 = int(w_scaled/2), int(h_scaled/2)
+    x1 = max(0, int(cx - w2))
+    y1 = max(0, int(cy - h2))
+    x2 = min(W, int(cx + w2))
+    y2 = min(H, int(cy + h2))
+
+    cropped = masked[y1:y2, x1:x2]
+    self._show("Cropped7", cropped)
+
+    if self.step_visualize:
+        cv2.destroyAllWindows()
+
+    return cropped
 \end{lstlisting}
 
 \newpage
 
-\section{Identyfikacja bierek i przygotowanie danych}
-Rozpoznanie typu i koloru bierki odbywa się poprzez fuzję wyników prostej detekcji koloru oraz predykcji sieci splotowej.
+\section{Identyfikacja figur szachowych i przygotowanie danych}
+Rozpoznanie typu i koloru figury szachowej odbywa się poprzez fuzję wyników prostej detekcji koloru oraz predykcji sieci splotowej.
 
 \subsection{Detekcja koloru i klasyfikacja CNN}
-Kolor bierki ('W' lub 'B') określany jest na podstawie średniej intensywności jasności segmentu w odniesieniu do progu $T$. Typ bierki (np. Pawn, King) wybierany jest na podstawie najwyższego logitu zwróconego przez model \texttt{ChessCNN}.
+Kolor figury szachowej ('W' lub 'B') określany jest na podstawie średniej intensywności jasności segmentu w odniesieniu do progu $T$. Typ figury szachowej (np. Pawn, King) wybierany jest na podstawie najwyższego logitu zwróconego przez model \texttt{ChessCNN}.
 
 \subsection{Kodowanie tablicy szachowej}
 Po zakończeniu iteracji przez wszystkie pola, klasa \texttt{BoardIdentification} wykonuje kluczowy krok mapowania wyników na notację algebraiczną za pomocą metody \texttt{encode\_board}. Metoda ta transformuje pary (kolor, typ) na standardowe, jednoznakowe symbole (np. biały goniec $\rightarrow$ 'B', czarny skoczek $\rightarrow$ 'n'). Tak przygotowana tablica $8 \times 8$ stanowi ustandaryzowane wejście dla modułów logiki szachowej.
