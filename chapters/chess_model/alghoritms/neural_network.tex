@@ -31,7 +31,7 @@ W celu rozwiązania tego problemu, powstała koncepcja warstw rezydualnych. Zmie
 
 W opisywanym modelu można ustawić liczbę warstw rezydualnych w pliku konfiguracyjnym pod nazwą \textit{num\_residual\_blocks}.
 
-Na rysunku 3.2 przedstawiona jest standardowa architektura warstwy rezydualnej. Składa się ona z 2 warstw konwolucyjnych wpieranych przez warstwy normalizacji batchowej oraz funkcje aktywacji.
+Na rysunku 3.2 przedstawiona jest standardowa architektura warstwy rezydualnej. Składa się ona z 2 warstw konwolucyjnych wpieranych przez warstwy normalizacji wsadowej oraz funkcje aktywacji.
 
 \hspace{0.5cm}
 
@@ -56,8 +56,8 @@ Liczbę filtrów w modelu sieci można ustawić w pliku konfiguracyjnym pod kluc
 
 \hspace{0.5cm}
 
-\subsection{Normalizacja batchowa}
-Normalizacja batchowa jest techniką adaptacyjnej reparametryzacji danych. Jej celem jest ograniczenie zjawiska wewnętrznego przesunięcia kowariancji \cite{BatchNormalization}. Zjawisko to polega na ciągłej zmianie rozkładu sygnału wyjściowego z warstw sieci neuronowej podczas adaptacji parametrów w trakcie uczenia. Innymi słowy, warstwy sieci są zależne od siebie nawzajem, przez co zmiana wag w jednej z nich wpływa na następne. Prowadzi to do problemów ze stabilnością oraz doborem optymalnego współczynnika uczenia, skutkując często eksplodującymi lub zanikającymi gradientami.
+\subsection{Normalizacja wsadowa}
+Normalizacja wsadowa jest techniką adaptacyjnej reparametryzacji danych. Jej celem jest ograniczenie zjawiska wewnętrznego przesunięcia kowariancji \cite{BatchNormalization}. Zjawisko to polega na ciągłej zmianie rozkładu sygnału wyjściowego z warstw sieci neuronowej podczas adaptacji parametrów w trakcie uczenia. Innymi słowy, warstwy sieci są zależne od siebie nawzajem, przez co zmiana wag w jednej z nich wpływa na następne. Prowadzi to do problemów ze stabilnością oraz doborem optymalnego współczynnika uczenia, skutkując często eksplodującymi lub zanikającymi gradientami.
 
 Aby zilustrować to zjawisko, można rozważyć sieć neuronową pozbawioną biasu oraz z tożsamościową funkcją aktywacji. W sytuacji, gdy wartości wag są większe od jedności, wyjście sieci po aktualizacji parametrów zmieni się znacząco z powodu mnożenia wag (wzór 3.1). Oznacza to, że nawet mała zmiana wag w jednej warstwie może spowodować dużą zmianę na wyjściu sieci, szczególnie w głębokich modelach \cite{BatchNormalization}, mimo zastosowania małego współczynnika uczenia \cite{DeepLearning}.
 
@@ -69,7 +69,7 @@ Aby zilustrować to zjawisko, można rozważyć sieć neuronową pozbawioną bia
 
 \hspace{0.5cm}
 
-W celu rozwiązania tego problemu, normalizacja batchowa normalizuje wyjście z warstwy na podstawie wyliczonej średniej oraz odchylenia standardowego całego batcha. W rezultacie rozkład danych posiada średnią równą zeru oraz jednostkowe odchylenie standardowe.
+W celu rozwiązania tego problemu, normalizacja wsadowa normalizuje wyjście z warstwy na podstawie wyliczonej średniej oraz odchylenia standardowego całego wsadu. W rezultacie rozkład danych posiada średnią równą zeru oraz jednostkowe odchylenie standardowe.
 
 \hspace{0.5cm}
 
@@ -91,7 +91,7 @@ gdzie $\mu$ to średnia, $\sigma$ to odchylenie standardowe, a $\epsilon$ to ma�
 \caption[Normalizacja]{Normalizacja. Dane są centrowane i skalowane, dzięki czemu zachowują swój kształt, lecz zmieniają zakres wartości.}
 \end{figure}
 
-Poniższe wzory prezentują mechanizm wstecznej propagacji błędu w opisanej wyżej prostej sieci. Ukazują one źródło problemu z niestabilnością gradientu oraz sposób, w jaki normalizacja batchowa go rozwiązuje. We wzorze 3.4 przedstawiony jest wzór na gradient w warstwie $n$ po wykonaniu różniczki wzoru 3.3. Składa się on z trzech czynników: pochodnej funkcji błędu, błędu z warstw wyższych oraz wyjścia z warstwy poprzedniej ($h_{n-1}$). To właśnie ten ostatni człon jest kluczowy. We wzorze 3.5 można zauważyć, że sygnał wejściowy $h_{n-1}$ zależy od iloczynu wag warstw poprzednich. W rezultacie, w sieci bez wykonywania normalizacji, może dojść do eksplozji lub zaniku gradientu, gdy wagi są odpowiednio duże lub małe.
+Poniższe wzory prezentują mechanizm wstecznej propagacji błędu w opisanej wyżej prostej sieci. Ukazują one źródło problemu z niestabilnością gradientu oraz sposób, w jaki normalizacja wsadowa go rozwiązuje. We wzorze 3.4 przedstawiony jest wzór na gradient w warstwie $n$ po wykonaniu różniczki wzoru 3.3. Składa się on z trzech czynników: pochodnej funkcji błędu, błędu z warstw wyższych oraz wyjścia z warstwy poprzedniej ($h_{n-1}$). To właśnie ten ostatni człon jest kluczowy. We wzorze 3.5 można zauważyć, że sygnał wejściowy $h_{n-1}$ zależy od iloczynu wag warstw poprzednich. W rezultacie, w sieci bez wykonywania normalizacji, może dojść do eksplozji lub zaniku gradientu, gdy wagi są odpowiednio duże lub małe.
 
 Zastosowanie normalizacji na $h_{n-1}$ eliminuje ten problem, niwelując zależność sygnału od skali wag. Prowadzi to do nietypowego zjawiska, w którym większe wagi skutkują mniejszymi gradientami \cite{BatchNormalization}. Dzięki temu sieć uczy się stabilniej, co pozwala na użycie większego współczynnika uczenia.
 
@@ -134,18 +134,18 @@ Natomiast zadaniem \textit{Excitation} jest wychwycenie nieliniowych zależnośc
 
 \newpage
 
-Porównując wykresy loss dla modeli z oraz bez bloków SE, można zauważyć różnicę w szybkości zbieżności. Model z SE osiąga lepszy wynik w krótszym czasie dla głowicy value.
+Porównując wykresy straty dla modeli z oraz bez bloków SE, można zauważyć różnicę w szybkości zbieżności. Model z SE osiąga lepszy wynik w krótszym czasie dla głowicy oceny.
 
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.9\textwidth]{images/bez-se.png}
-\caption[Wykres loss dla modelu bez bloków SE]{Wykres loss dla modelu bez bloków SE. Wykres przedstawia co drugą epokę.}
+\caption[Wykres straty dla modelu bez bloków SE]{Wykres straty dla modelu bez bloków SE. Wykres przedstawia co drugą epokę.}
 \end{figure}
 
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.9\textwidth]{images/nomal-model.png}
-\caption[Wykres loss dla modelu z blokami SE]{Wykres loss dla modelu z blokami SE. Wykres przedstawia co drugą epokę.}
+\caption[Wykres straty dla modelu z blokami SE]{Wykres straty dla modelu z blokami SE. Wykres przedstawia co drugą epokę.}
 \end{figure}
 
 \newpage
@@ -174,34 +174,34 @@ W tym punkcie pochodna funkcji przyjmuje wartość zerową. W rezultacie dla war
 
 \hspace{0.5cm}
 
-Bardzo znaczącą różnicę między SiLu, a ReLu widać przede wszystkim na wykresie loss dla głowicy value. Na zbiorze testowym model z ReLu jest niestabilny. Można również zauważyć, że nie jest on w stanie osiągnąć lepszego wyniku niż 0.880, podczas gdy SiLu schodzi do ok 0.865.
+Bardzo znaczącą różnicę między SiLu, a ReLu widać przede wszystkim na wykresie loss dla głowicy oceny. Na zbiorze testowym model z ReLu jest niestabilny. Można również zauważyć, że nie jest on w stanie osiągnąć lepszego wyniku niż 0.880, podczas gdy SiLu schodzi do ok 0.865.
 
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.9\textwidth]{images/ReLU-model.png}
-\caption[Wykres loss dla modelu z funkcją ReLu]{Wykres loss dla modelu z funkcją ReLu. Wykres przedstawia co drugą epokę.}
+\caption[Wykres straty dla modelu z funkcją ReLu]{Wykres straty dla modelu z funkcją ReLu. Wykres przedstawia co drugą epokę.}
 \end{figure}
 
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.9\textwidth]{images/nomal-model.png}
-\caption[Wykres loss dla modelu z funkcją SiLu]{Wykres loss dla modelu z funkcją SiLu. Wykres przedstawia co drugą epokę.}
+\caption[Wykres straty dla modelu z funkcją SiLu]{Wykres straty dla modelu z funkcją SiLu. Wykres przedstawia co drugą epokę.}
 \end{figure}
 
 \newpage
 
-\section{Policy head}
-W fazie końcowej, sieć rozdziela się na dwie specjalizacyjne głowice wyjściowe. Pierwsza z nich to \textit{policy head}. Zajmuje się ona stworzeniem rozkładu prawdopodobieństwa ruchów. Składa się z warstwy konwolucyjnej, normalizacji batchowej oraz funkcji aktywacji SiLu. Następnie dane są spłaszczane i przechodzą przez warstwę gęstą, której wyjście odpowiada liczbie możliwych ruchów w szachach. W rezultacie otrzymywany jest wektor logitów o rozmiarze 4992, który jest następnie przekształcany w rozkład prawdopodobieństwa za pomocą funkcji softmax. Dodatkowo jest użyty dropout w celu poprawy generalizacji modelu.
+\section{Głowica polityki}
+W fazie końcowej, sieć rozdziela się na dwie specjalizacyjne głowice wyjściowe. Pierwsza z nich to \textit{głowica polityki}. Zajmuje się ona stworzeniem rozkładu prawdopodobieństwa ruchów. Składa się z warstwy konwolucyjnej, normalizacji wsadowej oraz funkcji aktywacji SiLu. Następnie dane są spłaszczane i przechodzą przez warstwę gęstą, której wyjście odpowiada liczbie możliwych ruchów w szachach. W rezultacie otrzymywany jest wektor logitów o rozmiarze 4992, który jest następnie przekształcany w rozkład prawdopodobieństwa za pomocą funkcji softmax. Dodatkowo jest użyty dropout w celu poprawy generalizacji modelu.
 
 
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.7\textwidth]{images/policy_head.png}
-\caption{Architektura policy head}
+\caption{Architektura głowicy polityki}
 \end{figure}
 
-\section{Value head}
-Value head jest drugą głowicą wyjściową sieci neuronowej. Jej zadaniem jest stworzenie rozkładu prawdopodobieństwa wyniku partii. Jest zbudowana bardzo podobnie do policy head z tą różnicą, że zawiera jedną warstwę gęstą więcej. Jest to spowodowane tym, że przewidywanie wyniku partii jest bardzo złożonym zadaniem. Dodatkowo w porównaniu do policy warstwa gęsta posiada znacznie mniej parametrów, dzięki czemu mimo większej liczby warstw, nie wpływa to znacząco na złożoność obliczeniową modelu. Wyjście z tej głowicy jest o rozmiarze 3, co odpowiada opisywanym wcześniej mechanizmowi WDL.
+\section{Głowica oceny}
+Głowica oceny jest drugą głowicą wyjściową sieci neuronowej. Jej zadaniem jest stworzenie rozkładu prawdopodobieństwa wyniku partii. Jest zbudowana bardzo podobnie do głowicy polityki z tą różnicą, że zawiera jedną warstwę gęstą więcej. Jest to spowodowane tym, że przewidywanie wyniku partii jest bardzo złożonym zadaniem. Dodatkowo w porównaniu do głowicy polityki warstwa gęsta posiada znacznie mniej parametrów, dzięki czemu mimo większej liczby warstw, nie wpływa to znacząco na złożoność obliczeniową modelu. Wyjście z tej głowicy jest o rozmiarze 3, co odpowiada opisywanym wcześniej mechanizmowi WDL.
 
 \hspace{2cm}
 
@@ -212,18 +212,18 @@ Value head jest drugą głowicą wyjściową sieci neuronowej. Jej zadaniem jest
 \end{figure}
 
 \section{Funkcja straty}
-Celem trenowania sieci neuronowej jest minimalizacja funkcji straty, która składa się z dwóch składników: policy loss oraz value loss. Każdy z nich jest entropią krzyżową między przewidywaniami sieci, a rzeczywistymi wartościami z danych treningowych. Dodatkowo trzeba zaznaczyć, że rozmiar wyjścia z obu głowic modelu znacznie się różni. W przypadku policy head jest to 4992 możliwych ruchów, natomiast w value jest są to jedynie 3 możliwe wyniki partii. W związku z tym, aby zrównoważyć wpływ obu składników na funkcję straty, value loss jest mnożony przez współczynnik 2. Taki dobór współczynnika okazał sie optymalny, gdyż większe skupienie na głowicy value powoduje przeuczenie oraz nieznaczne pogorszenie się wyników dla policy.
+Celem trenowania sieci neuronowej jest minimalizacja funkcji straty, która składa się z dwóch składników: straty głowicy polityki oraz straty głowicy oceny. Każdy z nich jest entropią krzyżową między przewidywaniami sieci, a rzeczywistymi wartościami z danych treningowych. Dodatkowo trzeba zaznaczyć, że rozmiar wyjścia z obu głowic modelu znacznie się różni. W przypadku głowicy polityki jest to 4992 możliwych ruchów, natomiast dla głowicy oceny są to jedynie 3 możliwe wyniki partii. W związku z tym, aby zrównoważyć wpływ obu składników na funkcję straty, strata głowicy oceny jest mnożona przez współczynnik 2. Taki dobór współczynnika okazał sie optymalny, gdyż większe skupienie na głowicy oceny powoduje przeuczenie oraz nieznaczne pogorszenie się wyników dla głowicy polityki.
 
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.9\textwidth]{images/x3-net.png}
-\caption[Funkcja loss ze współczynnikiem 3]{Funkcja loss ze współczynnikiem 3. Wykres przedstawia co drugą epokę}
+\caption[Funkcja straty ze współczynnikiem 3]{Funkcja straty ze współczynnikiem 3. Wykres przedstawia co drugą epokę}
 \end{figure}
 
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.9\textwidth]{images/x4-net.png}
-\caption[Funkcja loss ze współczynnikiem 4]{Funkcja loss ze współczynnikiem 4. Wykres przedstawia co drugą epokę}
+\caption[Funkcja straty ze współczynnikiem 4]{Funkcja straty ze współczynnikiem 4. Wykres przedstawia co drugą epokę}
 \end{figure}
 
 
@@ -246,32 +246,32 @@ Należy też zauważyć, że procesy działają niezależnie oraz równolegle. W
 \end{figure}
 
 \section{Ewaluacja modelu}
-Końcowy model sieci neuronowej został wytrenowany na 960tys gier, co daje równowartość około 80mln ruchów. Zbiór testowy składa się z 240tys gier. Sieć neuronowa zbudowana jest z 14 bloków rezydualnych, gdzie każdy z nich posiada 64 filtry. Głowica policy zawiera 4 filtry, natomiast głowica value 32. Rozmiar bufora danych jest ustawiony na 10,000. Model został wytrenowany na 26 epokach z użyciem współczynnika uczenia równego 0.001 oraz batch size równy 2048.
+Końcowy model sieci neuronowej został wytrenowany na 960tys gier, co daje równowartość około 80mln ruchów. Zbiór testowy składa się z 240tys gier. Sieć neuronowa zbudowana jest z 14 bloków rezydualnych, gdzie każdy z nich posiada 64 filtry. Głowica polityki zawiera 4 filtry, natomiast głowica oceny 32. Rozmiar bufora danych jest ustawiony na 10,000. Model został wytrenowany na 26 epokach z użyciem współczynnika uczenia równego 0.001 oraz batch size równy 2048.
 
-Na rysunku 3.15 można dostrzec, że model na danych testowych dla głowicy policy osiągnął wartość ok 1.4, co jest bardzo dobrym wynikiem. Krzywa loss dla danych testowych jest niżej niż dla danych treningowych, co jest spowodowane użyciem warstw dropout.
+Na rysunku 3.15 można dostrzec, że model na danych testowych dla głowicy polityki osiągnął wartość ok 1.4, co jest bardzo dobrym wynikiem. Krzywa straty dla danych testowych jest niżej niż dla danych treningowych, co jest spowodowane użyciem warstw dropout.
 
-Głowica value osiągnęła przeciętny wynik, jednakże biorąc pod uwagę złożoność zadania jest on akceptowalny. Trzeba mieć na uwadze, że ocena planszy bazuje na końcowym wyniku partii, który w części przypadku jest niemożliwy do przewidzenia na podstawie samej pozycji, szczególnie w początkowej fazie rozgrywki.
+Głowica oceny osiągnęła przeciętny wynik, jednakże biorąc pod uwagę złożoność zadania jest on akceptowalny. Trzeba mieć na uwadze, że ocena planszy bazuje na końcowym wyniku partii, który w części przypadku jest niemożliwy do przewidzenia na podstawie samej pozycji, szczególnie w początkowej fazie rozgrywki.
 
-Rysunek 3.16 przedstawia wykres loss dla identycznego modelu, ale z 7 blokami rezydualnymi. Widać wyraźnie znaczne pogorszenie się wyników dla głowicy value.
+Rysunek 3.16 przedstawia wykres starty dla identycznego modelu, ale z 7 blokami rezydualnymi. Widać wyraźnie znaczne pogorszenie się wyników dla głowicy oceny.
 
-Macierz pomyłek dla głowicy value podobnie jak wykres loss wskazuje na problem z dokładnością predykcji. Widać również problem z niezbalansowaniem klas, gdzie gier zakończonych remisem jest znacznie mniej niż wygranych, bądź przegranych. Pomimo niedostatecznej jakości głowicy value, model jest wspomagany przez drzewo MCTS, które w dużej mierze poprawia jakość predykcji.
+Macierz pomyłek dla głowicy oceny podobnie jak wykres straty wskazuje na problem z dokładnością predykcji. Widać również problem z niezbalansowaniem klas, gdzie gier zakończonych remisem jest znacznie mniej niż wygranych, bądź przegranych. Pomimo niedostatecznej jakości głowicy oceny, model jest wspomagany przez drzewo MCTS, które w dużej mierze poprawia jakość predykcji.
 
 
 
-Wykres dokładności top-10 dla głowicy policy, pokazuje że głowica policy bardzo dobrze sobie radzi z przewidywaniem ruchów. W 81 procentach przypadków prawidłowy ruch znajduje się wśród 3 najwyższych przewidywań sieci. Miara ta oddaje znacznie lepiej jakość modelu, niż zwykła dokładność oparta o najwyższy wynik, gdyż w szachach nie istnieje tylko jeden prawidłowy ruch. Często istnieje kilka dobrych posunięć, które następnie są analizowane przez drzewo MCTS.
+Wykres dokładności top-10 dla głowicy polityki, pokazuje że głowica polityki bardzo dobrze sobie radzi z przewidywaniem ruchów. W 81 procentach przypadków prawidłowy ruch znajduje się wśród 3 najwyższych przewidywań sieci. Miara ta oddaje znacznie lepiej jakość modelu, niż zwykła dokładność oparta o najwyższy wynik, gdyż w szachach nie istnieje tylko jeden prawidłowy ruch. Często istnieje kilka dobrych posunięć, które następnie są analizowane przez drzewo MCTS.
 
 \newpage
 
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.9\textwidth]{images/nomal-model.png}
-\caption[Wykres loss dla końcowego modelu]{Wykres loss dla końcowego modelu. Wykres przedstawia co drugą epokę}
+\caption[Wykres straty dla końcowego modelu]{Wykres straty dla końcowego modelu. Wykres przedstawia co drugą epokę}
 \end{figure}
 
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.9\textwidth]{images/7_res_block_net.png}
-\caption[Wykres loss dla modelu z 7 blokami rezydualnymi]{Wykres loss dla modelu z 7 blokami rezydualnymi. Wykres przedstawia co drugą epokę}
+\caption[Wykres straty dla modelu z 7 blokami rezydualnymi]{Wykres straty dla modelu z 7 blokami rezydualnymi. Wykres przedstawia co drugą epokę}
 \end{figure}
 
 \newpage
@@ -279,17 +279,17 @@ Wykres dokładności top-10 dla głowicy policy, pokazuje że głowica policy ba
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.8\textwidth]{images/confusion-matrix.png}
-\caption{Macierz pomyłek dla głowicy value}
+\caption{Macierz pomyłek dla głowicy oceny}
 \end{figure}
 
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.7\textwidth]{images/top-k-acc.png}
-\caption{Wykres dokładności top-10 dla głowicy policy}
+\caption{Wykres dokładności top-10 dla głowicy polityki}
 \end{figure}
 
 \newpage
 
 \section{Wnioski z użytego modelu}
-Na podstawie przeprowadzonych eksperymentów można stwierdzić jeden główny problem opisywanego modelu. Jest nim niska jakość głowicy value. Jest ona przede wszystkim spowodowana słabą jakością danych treningowych, które są generowane na podstawie końcowego wyniku partii. Oznacza to, że stany plansz nie są indywidualnie etykietowane na podstawie ich faktycznej wartości. Problem ten jest szczególnie widoczny w początkowej fazie rozgrywki, gdzie przewidzenie wyniku na podstawie samej pozycji jest praktycznie niemożliwe.
+Na podstawie przeprowadzonych eksperymentów można stwierdzić jeden główny problem opisywanego modelu. Jest nim niska jakość głowicy oceny. Jest ona przede wszystkim spowodowana słabą jakością danych treningowych, które są generowane na podstawie końcowego wyniku partii. Oznacza to, że stany plansz nie są indywidualnie etykietowane na podstawie ich faktycznej wartości. Problem ten jest szczególnie widoczny w początkowej fazie rozgrywki, gdzie przewidzenie wyniku na podstawie samej pozycji jest praktycznie niemożliwe.
 Rozwiązaniem może być zastosowanie innego silnika szachowego do tworzenia etykiet podczas generowania zbioru danych. Nadawane by były one indywidualnie dla każdego stanu, niezależnie od końcowego wyniku. Aczkolwiek celem niniejszej pracy było stworzenie od podstaw całego algorytmu, niezależnego od istniejących rozwiązań, dlatego też nie zdecydowano się na takie podejście.
