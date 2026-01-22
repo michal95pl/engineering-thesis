@@ -46,14 +46,14 @@ def run(self):
 \section{Wizualizacja stanu gry (ChessGUI)}
 Panel gry (\texttt{GamePage}) dzieli ekran na dwie sekcje. Po lewej stronie wyświetlany jest przetworzony strumień wideo (szachownica po transformacji perspektywicznej), a po prawej wirtualna tablica generowana przez klasę \texttt{ChessGUI}.
 
-\texttt{ChessGUI} renderuje stan gry na obiekcie \texttt{tk.Canvas}, mapując symbole bierek (pobierane z \texttt{VideoFrame.get\_board\_state}) na odpowiednie ikony graficzne.
+\texttt{ChessGUI} renderuje stan gry na obiekcie \texttt{tk.Canvas}, mapując symbole figur szachowych (pobierane z \texttt{VideoFrame.get\_board\_state}) na odpowiednie ikony graficzne.
 
 \begin{lstlisting}[style=codeListingStyle, caption={Mapowanie symboli na zasoby graficzne}]
 def _load_images(self):
     mapping = {
         'r': 'black_rook.png', 'n': 'black_knight.png', 
         'R': 'white_rook.png', 'N': 'white_knight.png',
-        # ... reszta bierek
+        # ... reszta figur szachowych
     }
     for k, v in mapping.items():
         img = Image.open(f"./assets/chessgui/{v}").resize((45, 45))
@@ -98,7 +98,7 @@ Po wyborze kamery wywoływany jest \textit{listener}, który usuwa interfejs wyb
 \subsection{Pętla gry i komunikacja z silnikiem}
 Właściwa logika gry odbywa się wewnątrz klasy \texttt{VideoFrame}. Przepływ danych w jednej iteracji pętli wygląda następująco:
 \begin{itemize}
-    \item \textbf{Przetwarzanie obrazu:} Pobranie klatki $\rightarrow$ Transformacja perspektywiczna $\rightarrow$ Identyfikacja bierek za pomocą \texttt{ChessCNN}.
+    \item \textbf{Przetwarzanie obrazu:} Pobranie klatki $\rightarrow$ Transformacja perspektywiczna $\rightarrow$ Identyfikacja figur szachowych za pomocą \texttt{ChessCNN}.
     \item \textbf{Zapis stanu:} Wykryta tablica (lista 8x8) jest przekazywana do \texttt{JsonUpdater}, który konwertuje ją na notację FEN i zapisuje w pliku \texttt{data.json}.
     \item \textbf{Zarządzanie turą:} System sprawdza, czyja jest tura (\texttt{check\_turn}). Jeśli wykryto ruch białych (gracza), system wysyła aktualny stan FEN do serwera.
     \item \textbf{Interakcja z serwerem:} Serwer analizuje pozycję i odsyła najlepszy ruch dla czarnych. System oczekuje na ten ruch (z timeoutem 15 sekund).

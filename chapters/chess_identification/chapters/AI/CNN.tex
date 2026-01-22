@@ -1,5 +1,5 @@
 \setcounter{chapter}{7}
-\chapter[Architektura sieci neuronowej do klasyfikacji bierek {[\textit{Marcin Ziółkowski}]}]{Architektura sieci neuronowej do klasyfikacji bierek}
+\chapter[Architektura sieci neuronowej do klasyfikacji figur szachowych {[\textit{Marcin Ziółkowski}]}]{Architektura sieci neuronowej do klasyfikacji figur szachowych}
 
 Współczesne systemy wizyjne opierają swoją skuteczność na splotowych sieciach neuronowych (ang. \textit{Convolutional Neural Networks} – CNN). W przeciwieństwie do klasycznych sieci gęstych (MLP), sieci CNN są zaprojektowane tak, aby wykorzystywać przestrzenną strukturę danych obrazowych poprzez mechanizm współdzielenia wag i lokalnej spójności.
 
@@ -20,7 +20,7 @@ Fakty techniczne dotyczące ekstrakcji cech w modelu \texttt{ChessCNN}:
 
 \section{Szczegółowa architektura ChessCNN}
 
-Model \texttt{ChessCNN} został zaprojektowany z myślą o efektywności obliczeniowej oraz maksymalnym wykorzystaniu lokalnych cech obrazu o niskiej rozdzielczości ($30 \times 30$ pikseli). Architektura opiera się na trzech blokach ekstrakcji cech, z których każdy realizuje specyficzne zadanie w procesie interpretacji piktogramu na tokenie.
+Model \texttt{ChessCNN} został zaprojektowany z myślą o efektywności obliczeniowej oraz maksymalnym wykorzystaniu lokalnych cech obrazu o niskiej rozdzielczości ($50 \times 50$ pikseli). Architektura opiera się na trzech blokach ekstrakcji cech, z których każdy realizuje specyficzne zadanie w procesie interpretacji piktogramu na tokenie.
 
 
 
@@ -50,7 +50,7 @@ Operacja \texttt{AdaptiveAvgPool2d} uśrednia każdą ze 128 map cech do pojedyn
 \begin{enumerate}
     \item \textbf{Drastyczna redukcja parametrów:} Liczba wag w warstwie klasyfikatora zależy wyłącznie od liczby filtrów w ostatnim bloku (w tym przypadku 128), a nie od rozdzielczości obrazu wejściowego. Dzięki temu model zajmuje znacznie mniej pamięci.
     \item \textbf{Odporność na przesunięcia (Inwariantność przestrzenna):} Ponieważ uśredniamy całą mapę, nie ma znaczenia, w którym dokładnie miejscu piktogramu sieć wykryła charakterystyczną cechę (np. krzywiznę skoczka). Liczy się jedynie fakt jej wystąpienia w obrębie pola.
-    \item \textbf{Regularność i interpretowalność:} GAP wymusza na warstwach splotowych bycie "detektorami konkretnych obiektów". Każda z 128 wartości w końcowym wektorze bezpośrednio reprezentuje pewność wystąpienia konkretnego wzorca wizualnego w całym obrazie, co naturalnie łączy mapy cech z końcowymi kategoriami bierek.
+    \item \textbf{Regularność i interpretowalność:} GAP wymusza na warstwach splotowych bycie "detektorami konkretnych obiektów". Każda z 128 wartości w końcowym wektorze bezpośrednio reprezentuje pewność wystąpienia konkretnego wzorca wizualnego w całym obrazie, co naturalnie łączy mapy cech z końcowymi kategoriami figur szachowych.
 \end{enumerate}
 
 \subsection{Klasyfikator i regularyzacja}
@@ -59,7 +59,7 @@ Ostatnim etapem jest dwuwarstwowy klasyfikator. Zastosowanie warstwy \texttt{Dro
 
 Podczas treningu losowo wyłączane jest 20\% neuronów, co wymusza na sieci tworzenie redundantnych ścieżek przepływu informacji i zapobiega sytuacji, w której model się przeucza.
 
-Finalna warstwa \texttt{Linear} mapuje 128 cech na 6 klas bierek. W procesie uczenia funkcja \texttt{LogSoftmax} (zaszyta w \texttt{CrossEntropyLoss}) wyznacza rozkład prawdopodobieństwa dla każdej klasy. Należy jednak zaznaczyć, że podczas identyfikacji bierek na szachownicy pomija się obliczanie prawdopodobieństw. Zamiast tego wybierany jest indeks o najwyższej wartości wyjściowej (logit) za pomocą operacji \texttt{argmax}.
+Finalna warstwa \texttt{Linear} mapuje 128 cech na 6 klas figur szachowych. W procesie uczenia funkcja \texttt{LogSoftmax} (zaszyta w \texttt{CrossEntropyLoss}) wyznacza rozkład prawdopodobieństwa dla każdej klasy. Należy jednak zaznaczyć, że podczas identyfikacji figur szachowych na szachownicy pomija się obliczanie prawdopodobieństw. Zamiast tego wybierany jest indeks o najwyższej wartości wyjściowej (logit) za pomocą operacji \texttt{argmax}.
 
 \begin{table}[h]
 \centering
@@ -67,12 +67,12 @@ Finalna warstwa \texttt{Linear} mapuje 128 cech na 6 klas bierek. W procesie ucz
 \begin{tabular}{|l|c|r|}
 \hline
 \textbf{Warstwa} & \textbf{Rozmiar wyjściowy} & \textbf{Liczba parametrów} \\ \hline
-Wejście (RGB) & $30 \times 30 \times 3$ & 0 \\ \hline
-Blok 1 (2x Conv32) & $15 \times 15 \times 32$ & ~10,000 \\ \hline
-Blok 2 (2x Conv64) & $7 \times 7 \times 64$ & ~55,000 \\ \hline
-Blok 3 (2x Conv128) & $7 \times 7 \times 128$ & ~220,000 \\ \hline
-Global Avg Pool & $1 \times 1 \times 128$ & 0 \\ \hline
-Linear Classifier & 6 klas & ~800 \\ \hline
+Wejście (Grayscale) & $30 \times 30 \times 1$ & 0 \\ \hline
+Blok 1 (2x Conv32 + BN) & $15 \times 15 \times 32$ & 9~728 \\ \hline
+Blok 2 (2x Conv64 + BN) & $7 \times 7 \times 64$ & 55~808 \\ \hline
+Blok 3 (2x Conv128 + BN) & $7 \times 7 \times 128$ & 222~208 \\ \hline
+Global Avg Pool (GAP) & $1 \times 1 \times 128$ & 0 \\ \hline
+Linear (Output) & 6 klas & 774 \\ \hline
 \end{tabular}
 \end{table}
 
@@ -127,7 +127,7 @@ Kombinacja ważonej funkcji kosztu oraz opisywanego harmonogramu uczenia, pozwol
 
 \section{Analiza wyników i wrażliwość modelu}
 
-Proces uczenia trwał 12 epok z wykorzystaniem \texttt{CosineAnnealingLR}. Pomimo osiągnięcia wysokiej dokładności w warunkach testowych, model wykazuje wrażliwość na czynniki zewnętrzne charakterystyczne dla fizycznych tokenów.
+Proces uczenia trwał 15 epok z wykorzystaniem \texttt{CosineAnnealingLR}. Pomimo osiągnięcia wysokiej dokładności w warunkach testowych, model wykazuje wrażliwość na czynniki zewnętrzne charakterystyczne dla fizycznych tokenów.
 
 \begin{figure}[H]
     \centering
@@ -135,7 +135,7 @@ Proces uczenia trwał 12 epok z wykorzystaniem \texttt{CosineAnnealingLR}. Pomim
     \caption[Przebieg funkcji straty oraz dokładności]{Przebieg funkcji straty oraz dokładności. Stabilizacja dzięki harmonogramowi cosinusoidalnemu.}
 \end{figure}
 
-Głównym problemem są cienie i odbicia światła na powierzchni tokenów. Ponieważ model operuje na dwuwymiarowych symbolach, silne odblaski mogą zniekształcić kontury piktogramu, prowadząc do błędnej klasyfikacji (np. mylenia Gońca ze Skoczkiem, jeśli odblask "odcina" fragment piktogramu). Aby zminimalizować ten efekt, w procesie uczenia wykorzystano techniki augmentacji z biblioteki \textit{Albumentations}, takie jak zmiany jasności, kontrastu oraz dodawanie szumu Gaussa \cite{Albumentations}, co ma na celu symulację trudnych warunków oświetleniowych panujących w rzeczywistym środowisku rozgrywki.
+Głównym problemem są cienie i odbicia światła na powierzchni tokenów. Ponieważ model operuje na dwuwymiarowych symbolach, silne odblaski mogą zniekształcić kontury piktogramu, prowadząc do błędnej klasyfikacji (np. mylenia Gońca ze Skoczkiem, jeśli odblask "odcina" fragment piktogramu). Aby zminimalizować ten efekt, w procesie uczenia wykorzystano techniki augmentacji z biblioteki \textit{Albumentations} \cite{Albumentations}, takie jak zmiany jasności, kontrastu oraz dodawanie szumu Gaussa, co ma na celu symulację trudnych warunków oświetleniowych panujących w rzeczywistym środowisku rozgrywki.
 
 \begin{figure}[H]
     \centering
