@@ -7,3 +7,8 @@ Skalę problemu szachowego zdefiniował już w 1950 roku Claude Shannon w swoim 
 Ewolucję algorytmów szachowych na przestrzeni lat dobrze obrazuje książka Huberta Dreyfusa \textit{Alchemy and Artificial Intelligence} z 1965 roku. Autor wówczas twierdził, że żaden program nie jest w stanie grać nawet na amatorskim poziomie. Rzeczywistość zweryfikowała te słowa zaledwie dwie dekady później, gdy w 1988 roku program \textit{Deep Thought} pokonał arcymistrza Benta Larsena, a w 1997 roku superkomputer \textit{Deep Blue} wygrał mecz z ówczesnym mistrzem świata, Garrym Kasparowem. Kolejnym przełomem był program AlphaZero opracowany przez Google DeepMind, który w 2017 roku pokonał algorytmy szachowe, takie jak Stockfish i Elmo.
 
 Celem niniejszej pracy jest zaprojektowanie kompletnego systemu do gry w szachy na fizycznej planszy, gdzie użytkownik będzie w stanie grać przeciwko silnikowi szachowemu.
+
+
+Praca składa się z dwóch głównych, współpracujących ze sobą modułów. Pierwszy z nich, obejmujący równoległy silnik szachowy wraz z interfejsem konsolowym i warstwą komunikacyjną, został całkowicie zrealizowany przez Michała Lichtarskiego. Drugi moduł, poświęcony analizie obrazu planszy oraz identyfikacji i lokalizacji figur w pełni opracował Marcin Ziółkowski.
+
+Interfejs graficzny aplikacji został zrealizowany przez obu autorów, gdzie Marcin Ziółkowski zaimplementował logikę wizualizacji stanu planszy, natomiast Michał Lichtarski odpowiadał za ekrany konfiguracyjne (wybór kamery, kalibracja kolorów) oraz oprawę graficzną wizualizacji stanu gry. Michał Lichtarski również zaprojektował i wykonał fizyczne żetony reprezentujące figury szachowe.
